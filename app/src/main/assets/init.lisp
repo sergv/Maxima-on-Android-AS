@@ -31,7 +31,7 @@
 (setq *autoconf-prefix* *maxima-dir*)
 (setq *maxima-source-root* *maxima-dir*)
 (setq *maxima-prefix* *maxima-dir*)
-(set-pathnames)                     
+(set-pathnames)
 (setq *prompt-suffix* (format nil "~A" (code-char 4)))
 
 ;;; describe(cmd) is not supported
@@ -217,7 +217,7 @@
           (gf-dlogb a b)
           (gf-dlog a) )))))
 
-(defun tex-char (x) 
+(defun tex-char (x)
   (cond ((equal x #\ ) "\\space ")
         ((equal x #\_) "\\_ ")
         (t x)))
@@ -258,49 +258,49 @@
        f2))))
 
 ;;; Dropbox support
-(let ((top (pop $file_search_maxima))) 
-    (push "/sdcard/Download/$$$.txt" $file_search_maxima) 
+(let ((top (pop $file_search_maxima)))
+    (push "/sdcard/Download/$$$.txt" $file_search_maxima)
     (push top $file_search_maxima))
-(let ((top (pop $file_type_maxima))) 
-    (push "txt" $file_type_maxima) 
+(let ((top (pop $file_type_maxima)))
+    (push "txt" $file_type_maxima)
     (push top $file_type_maxima))
 
 ;;; qepcad support
 (defun $system (&rest args)
   (let ((bashline "bash -c 'export qe="))
-    (if (>= (string> (first args) bashline) 
+    (if (>= (string> (first args) bashline)
             (length bashline))
       ;; perform qepcad
       (progn
         (format t "start qepcad~A" *prompt-suffix*)
         (read-line)))))
 
-(let ((top (pop $file_search_lisp))) 
-    (push "/data/data/jp.yhonda/files/additions/qepcad/qepmax/$$$.{lsp,lisp,fasl}" $file_search_lisp) 
+(let ((top (pop $file_search_lisp)))
+    (push "/data/data/jp.yhonda/files/additions/qepcad/qepmax/$$$.{lsp,lisp,fasl}" $file_search_lisp)
     (push top $file_search_lisp))
-(let ((top (pop $file_search_maxima))) 
-    (push "/data/data/jp.yhonda/files/additions/qepcad/qepmax/$$$.{mac,mc}" $file_search_maxima) 
+(let ((top (pop $file_search_maxima)))
+    (push "/data/data/jp.yhonda/files/additions/qepcad/qepmax/$$$.{mac,mc}" $file_search_maxima)
     (push top $file_search_maxima))
 
 
-(progn                                                                      
-  (if (not (boundp '$qepcad_installed_dir))                                 
-      (add2lnc '$qepcad_installed_dir $values))                             
-  (defparameter $qepcad_installed_dir                                              
+(progn
+  (if (not (boundp '$qepcad_installed_dir))
+      (add2lnc '$qepcad_installed_dir $values))
+  (defparameter $qepcad_installed_dir
                 "/data/data/jp.yhonda/files/additions/qepcad")
-  (if (not (boundp '$qepcad_input_file))                                 
-      (add2lnc '$qepcad_input_file $values))                             
-  (defparameter $qepcad_input_file                                              
-                "/data/data/jp.yhonda/files/qepcad_input.txt")           
-  (if (not (boundp '$qepcad_output_file))                                       
-      (add2lnc '$qepcad_output_file $values))                                   
-  (defparameter $qepcad_output_file                                             
+  (if (not (boundp '$qepcad_input_file))
+      (add2lnc '$qepcad_input_file $values))
+  (defparameter $qepcad_input_file
+                "/data/data/jp.yhonda/files/qepcad_input.txt")
+  (if (not (boundp '$qepcad_output_file))
+      (add2lnc '$qepcad_output_file $values))
+  (defparameter $qepcad_output_file
                 "/data/data/jp.yhonda/files/qepcad_output.txt")
-  (if (not (boundp '$qepcad_file_pattern))                                       
-      (add2lnc '$qepcad_file_pattern $values))                                   
+  (if (not (boundp '$qepcad_file_pattern))
+      (add2lnc '$qepcad_file_pattern $values))
   (defparameter $qepcad_file_pattern "/data/data/jp.yhonda/files/qepcad*.txt")
-  (if (not (boundp '$qepcad_option))                                       
-      (add2lnc '$qepcad_option $values))                                   
+  (if (not (boundp '$qepcad_option))
+      (add2lnc '$qepcad_option $values))
   (defparameter $qepcad_option " +N20000000 +L100000 "))
 
 ;;; always save support
@@ -314,13 +314,13 @@
 ($set_plot_option '((mlist) $gnuplot_term $canvas))
 ($set_plot_option '((mlist) $gnuplot_out_file "/data/data/jp.yhonda/files/maxout.html"))
 (setq $draw_graph_terminal '$canvas)
-  
+
 ;;; displa support
 ($load '$stringproc)
 (setq $display2d '$imaxima)
 (let ((old-displa (symbol-function 'maxima::displa)))
   (declare (special maxima::$display2d))
-  (defun maxima::displa (form) 
+  (defun maxima::displa (form)
     (if (eql maxima::$display2d 'maxima::$imaxima)
 	(if (and (equal (car form) '(mlabel)) (not (null (second form))))
 	    (format t "$$$$$$ RO1 ~A ~A $$$$$$" (second form) (maxima::$tex1 (third form)))
@@ -329,14 +329,14 @@
 
 ($load '$draw)
 
-($set_draw_defaults                                                             
-   '((mequal simp) $terminal $canvas)                                           
-   '((mequal simp) $file_name "/data/data/jp.yhonda/files/maxout"))             
+($set_draw_defaults
+   '((mequal simp) $terminal $canvas)
+   '((mequal simp) $file_name "/data/data/jp.yhonda/files/maxout"))
 
 ;;; /data/local/tmp/maxima-init.mac
-(setq $file_search_maxima                                                  
-        ($append '((mlist) "/data/local/tmp/###.{mac,mc}")                  
-                 $file_search_maxima))                               
+(setq $file_search_maxima
+        ($append '((mlist) "/data/local/tmp/###.{mac,mc}")
+                 $file_search_maxima))
 (if (probe-file "/data/local/tmp/maxima-init.mac") ($load "/data/local/tmp/maxima-init.mac"))
 
 ;;; lisp-utils/defsystem.lisp must be loaded.
@@ -351,11 +351,11 @@
 	    (mapc #'(lambda (z) (setq expr (apply1 expr z 0))) (cdr l))
 	    expr))
 
-(defmfun apply1 (expr *rule depth) 
+(defmfun apply1 (expr *rule depth)
   (cond
     ((> depth $maxapplydepth) expr)
     (t
-     (prog nil 
+     (prog nil
 	(*rulechk *rule)
 	(setq expr (rule-apply *rule expr))
 	b    (cond
@@ -376,8 +376,8 @@
 	    (mapc #'(lambda (z) (setq expr (car (apply1hack expr z)))) (cdr l))
 	    expr))
 
-(defmfun apply1hack (expr *rule) 
-  (prog (pairs max) 
+(defmfun apply1hack (expr *rule)
+  (prog (pairs max)
      (*rulechk *rule)
      (setq max 0)
      b    (cond
@@ -404,11 +404,11 @@
 (defmspec $apply2 (l) (setq l (cdr l))
 	  (let ((rulelist (cdr l))) (apply2 rulelist (meval (car l)) 0)))
 
-(defmfun apply2 (rulelist expr depth) 
+(defmfun apply2 (rulelist expr depth)
   (cond
     ((> depth $maxapplydepth) expr)
     (t
-     (prog (ans ruleptr rule-hit) 
+     (prog (ans ruleptr rule-hit)
       a    (setq ruleptr rulelist)
       b    (cond
 	     ((null ruleptr)
@@ -432,8 +432,8 @@
 (defmspec $applyb2 (l) (setq l (cdr l))
 	  (let ((rulelist (cdr l))) (car (apply2hack rulelist (meval (car l))))))
 
-(defmfun apply2hack (rulelist e) 
-  (prog (pairs max) 
+(defmfun apply2hack (rulelist e)
+  (prog (pairs max)
      (setq max 0)
      (cond ((atom e) (return (cons (apply2 rulelist e -1) 0)))
 	   ((specrepp e) (return (apply2hack rulelist (specdisrep e)))))
