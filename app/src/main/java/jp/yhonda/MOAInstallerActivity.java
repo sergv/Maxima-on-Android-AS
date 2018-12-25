@@ -23,12 +23,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.StatFs;
@@ -282,28 +279,21 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		} else {
 			maximaDirPath = null;
 		}
-		final String filelist[] = { internalDir.getAbsolutePath() + "/init.lisp",
+		final String filelist[] = {
+				internalDir.getAbsolutePath() + "/init.lisp",
 				internalDir.getAbsolutePath() + "/x86",
 				internalDir.getAbsolutePath() + "/maxima",
 				internalDir.getAbsolutePath() + "/maxima.x86",
 				internalDir.getAbsolutePath() + "/maxima.pie",
 				internalDir.getAbsolutePath() + "/maxima.x86.pie",
-				internalDir.getAbsolutePath() + "/additions", maximaDirPath };
-		for (int i = 0; i < filelist.length; i++) {
-			if ((filelist[i] != null) && (new File(filelist[i])).exists()) {
-				final List<String> list = new ArrayList<String>();
-				list.add(systembindir + "rm");
-				list.add("-R");
-				list.add(filelist[i]);
-				CommandExec sce = new CommandExec();
-				try {
-					sce.execCommand(list);
-				} catch (IOException e) {
-					Log.d("MoA", "exception10");
-					e.printStackTrace();
-				} catch (Exception e) {
-					Log.d("MoA", "exception11");
-					e.printStackTrace();
+				internalDir.getAbsolutePath() + "/additions",
+				maximaDirPath
+			};
+		for (final String path : filelist) {
+			if (path != null) {
+				final File f = new File(path);
+				if (f.exists()) {
+					FileUtils.deleteRecursive(f);
 				}
 			}
 		}
