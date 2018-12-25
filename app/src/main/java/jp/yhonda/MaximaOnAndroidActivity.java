@@ -548,14 +548,14 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				maximaProccess.clearStringBuilder();
 			}
 
-			if (isGraphFile()) {
+			if (FileUtils.exists(gnuplotInputFile())) {
 				final List<String> gnuplotCmd = new ArrayList<String>();
 				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
 					gnuplotCmd.add(internalDir + "/additions/gnuplot/bin/gnuplot.x86");
 				} else {
 					gnuplotCmd.add(internalDir + "/additions/gnuplot/bin/gnuplot");
 				}
-				gnuplotCmd.add(internalDir + "/maxout" + maximaProccess.getPID() + ".gnuplot");
+				gnuplotCmd.add(gnuplotInputFile());
 				try {
 					new CommandExec(gnuplotCmd);
 				} catch (IOException e) {
@@ -730,8 +730,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 	}
 
+	private String gnuplotInputFile() {
+		return APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot";
+	}
+
 	private void removeTmpFiles() {
-		File a = new File(APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot");
+		File a = new File(gnuplotInputFile());
 		if (a.exists()) {
 			a.delete();
 		}
@@ -743,10 +747,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		if (a.exists()) {
 			a.delete();
 		}
-	}
-
-	private Boolean isGraphFile() {
-		return FileUtils.exists(APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot");
 	}
 
 	private Boolean isQepcadFile() {
