@@ -345,7 +345,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			this.finish();
 		}
 		final List<String> list = new ArrayList<String>();
-		list.add(internalDir + "/" + CpuArchitecture.getMaximaFile());
+		list.add(internalDir + "/" + CpuArchitecture.getMaximaExecutableName());
 		list.add("--init-lisp=" + internalDir + "/init.lisp");
 
 		maximaProccess = new CommandExec();
@@ -803,7 +803,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 	private boolean maximaBinaryExists() {
 		CpuArchitecture.initCpuArchitecture();
-		final String res = CpuArchitecture.getMaximaFile();
+		final String res = CpuArchitecture.getMaximaExecutableName();
 		if (res == null) {
 			return false;
 		} else {

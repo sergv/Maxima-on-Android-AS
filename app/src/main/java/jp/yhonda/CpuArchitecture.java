@@ -51,7 +51,7 @@ public final class CpuArchitecture {
 		}
 	}
 
-	public static String getMaximaFile() {
+	public static String getMaximaExecutableName() {
 		final String arch;
 		switch (cpuarch) {
 			case x86: arch = ".x86"; break;

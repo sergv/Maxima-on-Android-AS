@@ -182,7 +182,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 						x86File.createNewFile();
 					}
 				}
-				final String maximaFile = CpuArchitecture.getMaximaFile();
+				final String maximaFile = CpuArchitecture.getMaximaExecutableName();
 				if (maximaFile == null) {
 					Log.v("MoA","Install of additions failed.");
 					install(10);
@@ -203,7 +203,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				break;
 			}
 			case 2: {
-				chmod755(internalDir.getAbsolutePath() + "/" + CpuArchitecture.getMaximaFile());
+				chmod755(internalDir.getAbsolutePath() + "/" + CpuArchitecture.getMaximaExecutableName());
 				UnzipAsyncTask uzt = new UnzipAsyncTask(this);
 				uzt.setParams(this.getAssets().open("maxima-" + vers + ".zip"),
 						installedDir.getAbsolutePath(), getString(R.string.install_maxima_data),
@@ -271,7 +271,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 			Log.v("MoA","exception chmod755 2");
 		}
 	}
-	
+
 	private void removeMaximaFiles() {
 		final MaximaVersion prevVers = new MaximaVersion();
 		prevVers.loadVersFromSharedPrefs(this);
