@@ -1,6 +1,5 @@
 package jp.yhonda;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
@@ -8,7 +7,6 @@ import android.preference.*;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.*;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import java.util.*;
 
 /*
@@ -42,9 +40,9 @@ public final class MoAPreferenceActivity extends PreferenceActivity implements O
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
 
-        List<String> list = Arrays.asList("auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2");
-        for(String key : list){
-            AppGlobals.getSingleton().set(key,"false");
+        final String list[] = { "auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2" };
+        for (final String key : list) {
+            AppGlobals.getSingleton().set(key, "false");
         }
     }
 
@@ -56,23 +54,23 @@ public final class MoAPreferenceActivity extends PreferenceActivity implements O
 
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
         updatePreferenceSummary(key);
-        AppGlobals.getSingleton().set(key,"true");
+        AppGlobals.getSingleton().set(key, "true");
     }
 
     private void updatePreferenceSummary(final String key) {
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         final Preference pref = findPreference(key);
 
-        if (pref.getClass().equals(CheckBoxPreference.class)) {
-            CheckBoxPreference checkbox_preference = (CheckBoxPreference)pref;
-            if (checkbox_preference.isChecked()) {
-                checkbox_preference.setSummary("Yes");
+        if (pref instanceof CheckBoxPreference) {
+            final CheckBoxPreference x = (CheckBoxPreference)pref;
+            if (x.isChecked()) {
+                x.setSummary("Yes");
             } else {
-                checkbox_preference.setSummary("No");
+                x.setSummary("No");
             }
-        } else if (pref.getClass().equals(ListPreference.class)) {
-            ListPreference list_preference = (ListPreference)pref;
-            list_preference.setSummary(list_preference.getEntry());
+        } else if (pref instanceof ListPreference) {
+            final ListPreference x = (ListPreference)pref;
+            x.setSummary(x.getEntry());
         }
 
     }
