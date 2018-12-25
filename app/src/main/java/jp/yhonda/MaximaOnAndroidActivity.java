@@ -97,6 +97,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	MaximaVersion mvers = new MaximaVersion(5, 40, 0);
 
 	private static final int READ_REQUEST_CODE = 42;
+	// File to be deleted on exit.
     File temporaryScriptFile = null;
     final double scriptFileMaxSize = 1E7;
 
@@ -250,20 +251,20 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
                     public void run() {
                         startMaxima();
                     }
-                }).start();
+					}).start();
 
             } else {
-                new AlertDialog.Builder(this)
-                        .setTitle(R.string.installer_title)
-                        .setMessage(R.string.install_failure)
-                        .setPositiveButton(R.string.OK,
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog,
-                                                        int which) {
-                                        finish();
-                                    }
-                                }).show();
+				final DialogInterface.OnClickListener finish = new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(final DialogInterface dialog, final int which) {
+						finish();
+					}
+					};
+				new AlertDialog.Builder(this)
+					.setTitle(R.string.installer_title)
+					.setMessage(R.string.install_failure)
+					.setPositiveButton(R.string.OK, finish)
+					.show();
             }
         }
 	}
@@ -300,9 +301,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			webview.loadUrl("javascript:window.ChangeExpSize(" + sharedPrefs.getString("fontSize2", "20") + ")");
 		}
 
-		List<String> list = Arrays.asList("auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2");
-		for (String key : list) {
-			globals.set(key,"false");
+		final String list[] = { "auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2" };
+		for (final String key : list) {
+			globals.set(key, "false");
 		}
 	}
 
