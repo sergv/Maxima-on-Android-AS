@@ -37,18 +37,18 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 public final class MOAInstallerActivity extends AppCompatActivity {
-	File installedDir;
-	File internalDir;
-	File externalDir;
-	Button okB;
-	Button cancelB;
-	RadioButton intB;
-	RadioButton extB;
-	RadioGroup rgroup;
-	TextView msg;
-	long intStorageAvail;
-	long extStorageAvail;
-	Activity me;
+	private File installedDir;
+	private File internalDir;
+	private File externalDir;
+	private Button okB;
+	private Button cancelB;
+	private RadioButton intB;
+	private RadioButton extB;
+	private RadioGroup rgroup;
+	private TextView msg;
+	private long intStorageAvail;
+	private long extStorageAvail;
+	private Activity me;
 	public Activity parent;
 	String systembindir = "/system/bin/";
 
@@ -174,7 +174,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				}
 				// Existence of file x86 is used in qepcad.sh
 				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
-					final File x86File = new File(internalDir.getAbsolutePath()+"/x86");
+					final File x86File = new File(internalDir.getAbsolutePath() + "/x86");
 					if (!x86File.exists()) {
 						x86File.createNewFile();
 					}

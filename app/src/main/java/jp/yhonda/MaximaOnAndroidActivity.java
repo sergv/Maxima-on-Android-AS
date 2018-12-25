@@ -70,18 +70,18 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	boolean inited=false; /* expSize initialize is done or not */
 	String[] mcmdArray = null; /* manual example input will be stored. */
 	int mcmdArrayIndex = 0;
-	Activity thisActivity = this;
 	String maximaURL = null;
 
 	private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
 	private static final String graphOut = APP_DATA_DIR + "/files/maxout.html";
 
-	String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
-	String manen = "file:///android_asset/maxima-doc/en/maxima.html";
-	String mande = "file:///android_asset/maxima-doc/en/de/maxima.html";
-	String manes = "file:///android_asset/maxima-doc/en/es/maxima.html";
-	String manpt = "file:///android_asset/maxima-doc/en/pt/maxima.html";
-	String manptbr = "file:///android_asset/maxima-doc/en/pt_BR/maxima.html";
+	private static final String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
+	private static final String manen = "file:///android_asset/maxima-doc/en/maxima.html";
+	private static final String mande = "file:///android_asset/maxima-doc/en/de/maxima.html";
+	private static final String manes = "file:///android_asset/maxima-doc/en/es/maxima.html";
+	private static final String manpt = "file:///android_asset/maxima-doc/en/pt/maxima.html";
+	private static final String manptbr = "file:///android_asset/maxima-doc/en/pt_BR/maxima.html";
+
 	String manURL;
 	boolean manLangChanged = true;
 	boolean allExampleFinished = false;
@@ -121,10 +121,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		webview = (WebView) findViewById(R.id.webView1);
 		webview.getSettings().setJavaScriptEnabled(true);
-		if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			WebView.setWebContentsDebuggingEnabled(true);
 		}
+		final Activity thisActivity = this;
 		webview.setWebViewClient(new WebViewClient() {
+			@Override
 			public void onPageFinished(WebView view, String url) {
 				Log.v("MoA", "onPageFinished");
 				SharedPreferences settings = PreferenceManager
@@ -136,7 +138,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		});
 		final SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(thisActivity);
+				.getDefaultSharedPreferences(this);
 		float sc = settings.getFloat("maxima main scale", 1.5f);
 		Log.v("MoA", "onCreate sc=" + Float.toString(sc));
 		webview.setInitialScale((int) (100 * sc));
@@ -147,6 +149,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 
 		webview.setWebChromeClient(new WebChromeClient() {
+			@Override
 			public boolean onConsoleMessage(ConsoleMessage cm) {
 				Log.d("MyApplication",
 						cm.message() + " -- From line " + cm.lineNumber()
@@ -160,13 +163,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		editText = (MultiAutoCompleteTextView) findViewById(R.id.editText1);
 		editText.setTextSize((float) Integer.parseInt(settings.getString("fontSize1","20")));
-		Boolean bflag=settings.getBoolean("auto_completion_check_box_pref", true);
-		if (bflag) {
-			editText.setThreshold(2);
-		} else {
-			editText.setThreshold(100);
-		}
-
+		Boolean bflag = settings.getBoolean("auto_completion_check_box_pref", true);
+		editText.setThreshold(bflag ? 2 : 100);
 		editText.setOnEditorActionListener(this);
 
 		ArrayAdapter<String> adapter =
@@ -178,7 +176,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		enterB = (Button) findViewById(R.id.enterB);
 		enterB.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
+			@Override
+			public void onClick(final View v) {
 				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,
 						KeyEvent.KEYCODE_ENTER));
 				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP,
@@ -277,32 +276,28 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		AppGlobals globals=AppGlobals.getSingleton();
 		String flag;
 
-		flag=globals.get("auto_completion_check_box_pref");
+		flag = globals.get("auto_completion_check_box_pref");
 		if (flag != null && flag.equals("true")) {
-			Boolean bflag=sharedPrefs.getBoolean("auto_completion_check_box_pref", true);
-            if (bflag) {
-                editText.setThreshold(2);
-            } else {
-                editText.setThreshold(100);
-            }
+			Boolean bflag = sharedPrefs.getBoolean("auto_completion_check_box_pref", true);
+			editText.setThreshold(bflag ? 2 : 100);
         }
 
-		flag=globals.get("manURL");
-		if (flag!=null && flag.equals("true")) {
-			manLangChanged=true;
-			manURL=sharedPrefs.getString("manURL",manen);
+		flag = globals.get("manURL");
+		if (flag != null && flag.equals("true")) {
+			manLangChanged = true;
+			manURL = sharedPrefs.getString("manURL",manen);
 		} else {
-			manLangChanged=false;
+			manLangChanged = false;
 		}
 
-		flag=globals.get("fontSize1");
-		if (flag!=null && flag.equals("true")) {
-			editText.setTextSize((float) Integer.parseInt(sharedPrefs.getString("fontSize1","20")));
+		flag = globals.get("fontSize1");
+		if (flag != null && flag.equals("true")) {
+			editText.setTextSize((float) Integer.parseInt(sharedPrefs.getString("fontSize1", "20")));
 		}
 
-		flag=globals.get("fontSize2");
-		if (flag!=null && flag.equals("true")) {
-			webview.loadUrl("javascript:window.ChangeExpSize(" + sharedPrefs.getString("fontSize2","20") + ")");
+		flag = globals.get("fontSize2");
+		if (flag != null && flag.equals("true")) {
+			webview.loadUrl("javascript:window.ChangeExpSize(" + sharedPrefs.getString("fontSize2", "20") + ")");
 		}
 
 		List<String> list = Arrays.asList("auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2");
@@ -430,10 +425,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 		String resString = maximaProccess.getProcessResult();
 		maximaProccess.clearStringBuilder();
-		Pattern pa= Pattern.compile(".*\\$\\$\\$\\$\\$\\$ R0 (.+) \\$\\$\\$\\$\\$\\$.*");
-		Matcher ma=pa.matcher(resString);
+		Pattern pa = Pattern.compile(".*\\$\\$\\$\\$\\$\\$ R0 (.+) \\$\\$\\$\\$\\$\\$.*");
+		Matcher ma = pa.matcher(resString);
 		if (ma.find()) {
-			final String oText=ma.group(1).replace("\\'","'");
+			final String oText = ma.group(1).replace("\\'","'");
 			runOnUiThread(new Runnable() {@Override public void run() { editText.setText(oText); }});
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
 				final ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -481,7 +476,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");}});
 				// webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");
 			}
-			inited=true;
+			inited = true;
 		}
 
 		Log.v("MoA", "sem released");
@@ -930,10 +925,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
             Toast.makeText(getApplicationContext(), R.string.error_loading_script_file, Toast.LENGTH_LONG).show();
             return;
         }
-        this.temporaryScriptFile = temporaryFile;   //Store temp file for later deletion
+        temporaryScriptFile = temporaryFile;   //Store temp file for later deletion
 
         //Build maxima load command and write it to the editText:
         final String command = "batch(\"" + temporaryFile.getAbsolutePath() + "\");";
-        this.editText.setText(command);
+        editText.setText(command);
     }
 }
