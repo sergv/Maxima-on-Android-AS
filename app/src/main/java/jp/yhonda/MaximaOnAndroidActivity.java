@@ -732,7 +732,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private String gnuplotInputFile() {
-		return APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot";
+		// return APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot";
+		return APP_DATA_DIR + "/files/maxout.gnuplot";
 	}
 
 	private void removeTmpFiles() {
