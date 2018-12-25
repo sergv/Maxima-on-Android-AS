@@ -22,16 +22,13 @@ under test directory. The name of the file is sample-dynamic-2.html -->
       displayMath: [ ['$$$$$$','$$$$$$'], ["\\[","\\]"] ],
       processEscapes: true
     },
-    "SVG": { 
+    "SVG": {
       availableFonts: ["Neo-Euler"],
       linebreaks: { automatic: true }
     }
 
   });
 </script>
-<!--
-<script type="text/javascript" src="mathjax-MathJax-24a378e/MathJax.js?config=TeX-AMS-MML_SVG"></script>
--->
 <script type="text/javascript" src="MathJax-2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
 <script>
 	(function() {
@@ -92,7 +89,7 @@ under test directory. The name of the file is sample-dynamic-2.html -->
         window.ChangeExpSize = function(s) {
             window.expSize=s;
             console.log("ChangeExpSize"+window.expSize);
-        }    
+        }
         window.appendNodeWithSize = function(node) {
             console.log("appendNodeWithSize"+window.expSize);
             var divnode=document.createElement("div");
@@ -100,7 +97,7 @@ under test directory. The name of the file is sample-dynamic-2.html -->
             divnode.appendChild(node);
             document.getElementById("MathList").appendChild(divnode);
         }
-        
+
 		window.splitText = function(text) {
 			console.log("splitText " + text);
 			var newtext = text.replace(/<br>/g, "\n");
@@ -172,7 +169,7 @@ under test directory. The name of the file is sample-dynamic-2.html -->
 		/*
 		    Java-JS Interface function
 		 */
-		
+
 		window.UpdateMath = function(pack) {
 			console.log("UpdateMath " + pack);
 			var RR=pack.match(/ *RO([1-2])/);
