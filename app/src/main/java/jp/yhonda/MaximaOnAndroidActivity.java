@@ -565,8 +565,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			maximaProccess.clearStringBuilder();
 			while (isStartQepcadString(resString)) {
 				final List<String> list = new ArrayList<String>();
-				list.add("/data/data/jp.yhonda/files/additions/qepcad/qepcad.sh");
-				CommandExec qepcadcom = new CommandExec();
+				list.add(APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh");
+				final CommandExec qepcadcom = new CommandExec();
 				try {
 					qepcadcom.execCommand(list);
 				} catch (Exception e) {
@@ -765,7 +765,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void removeTmpFiles() {
-		File a = new File("/data/data/jp.yhonda/files/maxout" + maximaProccess.getPID() + ".gnuplot");
+		File a = new File(APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot");
 		if (a.exists()) {
 			a.delete();
 		}
@@ -773,19 +773,19 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		if (a.exists()) {
 			a.delete();
 		}
-		a = new File("/data/data/jp.yhonda/files/qepcad_input.txt");
+		a = new File(APP_DATA_DIR + "/files/qepcad_input.txt");
 		if (a.exists()) {
 			a.delete();
 		}
 	}
 
 	private Boolean isGraphFile() {
-		final File a = new File("/data/data/jp.yhonda/files/maxout" + maximaProccess.getPID() + ".gnuplot");
+		final File a = new File(APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot");
 		return (a.exists());
 	}
 
 	private Boolean isQepcadFile() {
-		final File a = new File("/data/data/jp.yhonda/files/qepcad_input.txt");
+		final File a = new File(APP_DATA_DIR + "/files/qepcad_input.txt");
 		return (a.exists());
 	}
 
