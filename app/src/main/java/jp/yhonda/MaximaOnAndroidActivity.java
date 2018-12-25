@@ -85,11 +85,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	String manURL;
 	boolean manLangChanged = true;
 	boolean allExampleFinished = false;
-	Semaphore sem = new Semaphore(1);
+	final Semaphore sem = new Semaphore(1);
+
 	MultiAutoCompleteTextView editText;
-	Button enterB;
 	WebView webview;
 	ScrollView scview;
+
 	CommandExec maximaProccess;
 	File internalDir;
 	File externalDir;
@@ -127,11 +128,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		final Activity thisActivity = this;
 		webview.setWebViewClient(new WebViewClient() {
 			@Override
-			public void onPageFinished(WebView view, String url) {
+			public void onPageFinished(final WebView view, final String url) {
 				Log.v("MoA", "onPageFinished");
-				SharedPreferences settings = PreferenceManager
+				final SharedPreferences settings = PreferenceManager
 						.getDefaultSharedPreferences(thisActivity);
-				float sc = settings.getFloat("maxima main scale", 1.5f);
+				final float sc = settings.getFloat("maxima main scale", 1.5f);
 				Log.v("MoA", "sc=" + Float.toString(sc));
 				view.setInitialScale((int) (100 * sc));
 			}
@@ -150,7 +151,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		webview.setWebChromeClient(new WebChromeClient() {
 			@Override
-			public boolean onConsoleMessage(ConsoleMessage cm) {
+			public boolean onConsoleMessage(final ConsoleMessage cm) {
 				Log.d("MyApplication",
 						cm.message() + " -- From line " + cm.lineNumber()
 								+ " of " + cm.sourceId());
@@ -163,18 +164,18 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		editText = (MultiAutoCompleteTextView) findViewById(R.id.editText1);
 		editText.setTextSize((float) Integer.parseInt(settings.getString("fontSize1","20")));
-		Boolean bflag = settings.getBoolean("auto_completion_check_box_pref", true);
+		final Boolean bflag = settings.getBoolean("auto_completion_check_box_pref", true);
 		editText.setThreshold(bflag ? 2 : 100);
 		editText.setOnEditorActionListener(this);
 
-		ArrayAdapter<String> adapter =
+		final ArrayAdapter<String> adapter =
 				new ArrayAdapter<String>(this,
 						android.R.layout.simple_dropdown_item_1line, getResources().getStringArray(R.array.MaximaCompletionList));
 		editText.setTokenizer(new MaximaTokenizer());
 		editText.setAdapter(adapter);
 		webview.setOnTouchListener(this);
 
-		enterB = (Button) findViewById(R.id.enterB);
+		final Button enterB = (Button) findViewById(R.id.enterB);
 		enterB.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(final View v) {
@@ -219,20 +220,19 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		Log.v("MoA", "sender = " + sender);
         if (sender == null && requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             //User has selected a script file to load.
-            Uri uri;
-			uri = data.getData();
+            final Uri uri = data.getData();
             //Copy file contents to input area:
 			copyScriptFileToInputArea(uri);
         } else if (sender.equals("manualActivity")) {
 			if (resultCode == RESULT_OK) {
-				String mcmd = data.getStringExtra("maxima command");
+				final String mcmd = data.getStringExtra("maxima command");
 				if (mcmd != null) {
 					copyExample(mcmd);
 				}
 			}
 		} else if (sender.equals("FBActivity")) {
 			if (resultCode == RESULT_OK) {
-				String mcmd = data.getStringExtra("maxima command");
+				final String mcmd = data.getStringExtra("maxima command");
 				if (mcmd != null) {
 					editText.setText(mcmd);
 					editText.setSelection(mcmd.length());
@@ -272,13 +272,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	protected void onResume() {
 		Log.d("MoA","onResume");
 		super.onResume();
-		SharedPreferences sharedPrefs=PreferenceManager.getDefaultSharedPreferences(this);
-		AppGlobals globals=AppGlobals.getSingleton();
+		final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+		final AppGlobals globals = AppGlobals.getSingleton();
 		String flag;
 
 		flag = globals.get("auto_completion_check_box_pref");
 		if (flag != null && flag.equals("true")) {
-			Boolean bflag = sharedPrefs.getBoolean("auto_completion_check_box_pref", true);
+			final Boolean bflag = sharedPrefs.getBoolean("auto_completion_check_box_pref", true);
 			editText.setThreshold(bflag ? 2 : 100);
         }
 
@@ -423,10 +423,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			e.printStackTrace();
 			exitMOA();
 		}
-		String resString = maximaProccess.getProcessResult();
+		final String resString = maximaProccess.getProcessResult();
 		maximaProccess.clearStringBuilder();
-		Pattern pa = Pattern.compile(".*\\$\\$\\$\\$\\$\\$ R0 (.+) \\$\\$\\$\\$\\$\\$.*");
-		Matcher ma = pa.matcher(resString);
+		final Pattern pa = Pattern.compile(".*\\$\\$\\$\\$\\$\\$ R0 (.+) \\$\\$\\$\\$\\$\\$.*");
+		final Matcher ma = pa.matcher(resString);
 		if (ma.find()) {
 			final String oText = ma.group(1).replace("\\'","'");
 			runOnUiThread(new Runnable() {@Override public void run() { editText.setText(oText); }});
@@ -458,7 +458,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		handler.postDelayed(task, 1000);
 	}
 
-	public boolean onEditorAction(TextView testview, int id, KeyEvent keyEvent) {
+	public boolean onEditorAction(final TextView testview, final int id, final KeyEvent keyEvent) {
 		try {
 			Log.v("MoA", "onEditorAction");
 			sem.acquire();
