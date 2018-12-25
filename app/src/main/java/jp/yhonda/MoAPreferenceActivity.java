@@ -31,7 +31,7 @@ import java.util.*;
 
 public final class MoAPreferenceActivity extends PreferenceActivity implements OnSharedPreferenceChangeListener {
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preference);
     }
@@ -39,7 +39,7 @@ public final class MoAPreferenceActivity extends PreferenceActivity implements O
     @Override
     protected void onResume() {
         super.onResume();
-        SharedPreferences sharedPrefs=PreferenceManager.getDefaultSharedPreferences(this);
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
 
         List<String> list = Arrays.asList("auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2");
@@ -54,14 +54,14 @@ public final class MoAPreferenceActivity extends PreferenceActivity implements O
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
     }
 
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+    public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
         updatePreferenceSummary(key);
         AppGlobals.getSingleton().set(key,"true");
     }
 
-    private void updatePreferenceSummary(String key) {
-        SharedPreferences sharedPrefs=PreferenceManager.getDefaultSharedPreferences(this);
-        Preference pref = findPreference(key);
+    private void updatePreferenceSummary(final String key) {
+        final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+        final Preference pref = findPreference(key);
 
         if (pref.getClass().equals(CheckBoxPreference.class)) {
             CheckBoxPreference checkbox_preference = (CheckBoxPreference)pref;

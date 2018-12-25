@@ -39,7 +39,7 @@ public class CommandExec {
 		process = builder.start();
 		is = process.getInputStream();
 		while (true) {
-			int c = is.read();
+			final int c = is.read();
 			if (c == -1) {
 				is.close();
 				break;

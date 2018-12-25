@@ -39,7 +39,7 @@ public class HTMLActivity extends AppCompatActivity {
 	WebView webview = null;
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.htmlactivity);
 		webview = (WebView) findViewById(R.id.webViewInHTMLActivity);
@@ -60,8 +60,8 @@ public class HTMLActivity extends AppCompatActivity {
 		});
 
 		if (Build.VERSION.SDK_INT >= 11) {
-			Intent intent = this.getIntent();
-			boolean hwaccel = intent.getBooleanExtra("hwaccel", true);
+			final Intent intent = this.getIntent();
+			final boolean hwaccel = intent.getBooleanExtra("hwaccel", true);
 			if (!hwaccel) {
 				webview.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 			}
@@ -86,18 +86,18 @@ public class HTMLActivity extends AppCompatActivity {
 	}
 
 	public void loadURLonCreate() {
-		File f = new File("/data/data/jp.yhonda/files/maxout.html");
+		final File f = new File("/data/data/jp.yhonda/files/maxout.html");
 		if (f.exists()) {
 			Log.v("MoA", "loadURLonCreate" + String.valueOf(f.length()));
 		}
-		Intent origIntent = this.getIntent();
-		String urlonCreate = origIntent.getStringExtra("url");
+		final Intent origIntent = this.getIntent();
+		final String urlonCreate = origIntent.getStringExtra("url");
 		webview.setContentDescription(urlonCreate);
 		webview.loadUrl(urlonCreate);
 	}
 
 	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
+	public boolean onKeyDown(final int keyCode, final KeyEvent event) {
 		if (event.getAction() == KeyEvent.ACTION_DOWN
 				&& keyCode == KeyEvent.KEYCODE_BACK
 				&& webview.canGoBack()) {

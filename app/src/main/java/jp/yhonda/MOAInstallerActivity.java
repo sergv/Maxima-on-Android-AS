@@ -127,8 +127,9 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		}
 	}
 
-	Button.OnClickListener ok_or_cancel_listener = new Button.OnClickListener() {
-		public void onClick(View view) {
+	final Button.OnClickListener ok_or_cancel_listener = new Button.OnClickListener() {
+		@Override
+		public void onClick(final View view) {
 			if (view == okB) {
 				if (rgroup.getCheckedRadioButtonId() == R.id.radioButton1) {
 					installedDir = internalDir;
@@ -150,8 +151,8 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		// maxima, init.lisp : internalDir
 		// maxima-5.X.0 : installedDir
 		Intent data = null;
-		Intent origIntent = this.getIntent();
-		String vers = origIntent.getStringExtra("version");
+		final Intent origIntent = this.getIntent();
+		final String vers = origIntent.getStringExtra("version");
 		try {
 			switch (stage) {
 			case 0: {
@@ -241,14 +242,14 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		}
 	}
 
-	private void copyFileFromAssetsToLocal(String src, String dest, String line)
+	private void copyFileFromAssetsToLocal(final String src, final String dest, final String line)
 			throws Exception {
 		InputStream fileInputStream = getApplicationContext().getAssets().open(
 				src);
 		BufferedOutputStream buf = new BufferedOutputStream(
 				new FileOutputStream(dest));
 		int read;
-		byte[] buffer = new byte[4096 * 128];
+		final byte[] buffer = new byte[4096 * 128];
 		buf.write(line.getBytes());
 		while ((read = fileInputStream.read(buffer)) > 0) {
 			buf.write(buffer, 0, read);
@@ -257,12 +258,12 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		fileInputStream.close();
 	}
 
-	private void chmod755(String filename) {
-		List<String> list = new ArrayList<String>();
+	private void chmod755(final String filename) {
+		final List<String> list = new ArrayList<String>();
 		list.add(systembindir + "chmod");
 		list.add("744");
 		list.add(filename);
-		CommandExec sce = new CommandExec();
+		final CommandExec sce = new CommandExec();
 		try {
 			sce.execCommand(list);
 		} catch (IOException e) {
@@ -273,10 +274,10 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 	}
 	
 	private void removeMaximaFiles() {
-		MaximaVersion prevVers = new MaximaVersion();
+		final MaximaVersion prevVers = new MaximaVersion();
 		prevVers.loadVersFromSharedPrefs(this);
-		String maximaDirName = "/maxima-" + prevVers.versionString();
-		String maximaDirPath = null;
+		final String maximaDirName = "/maxima-" + prevVers.versionString();
+		final String maximaDirPath;
 		if ((new File(internalDir.getAbsolutePath() + maximaDirName)).exists()) {
 			maximaDirPath = internalDir.getAbsolutePath() + maximaDirName;
 		} else if ((externalDir != null)
@@ -286,7 +287,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		} else {
 			maximaDirPath = null;
 		}
-		String filelist[] = { internalDir.getAbsolutePath() + "/init.lisp",
+		final String filelist[] = { internalDir.getAbsolutePath() + "/init.lisp",
 				internalDir.getAbsolutePath() + "/x86",
 				internalDir.getAbsolutePath() + "/maxima",
 				internalDir.getAbsolutePath() + "/maxima.x86",
@@ -295,8 +296,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				internalDir.getAbsolutePath() + "/additions", maximaDirPath };
 		for (int i = 0; i < filelist.length; i++) {
 			if ((filelist[i] != null) && (new File(filelist[i])).exists()) {
-				List<String> list = new ArrayList<String>();
-				list = new ArrayList<String>();
+				final List<String> list = new ArrayList<String>();
 				list.add(systembindir + "rm");
 				list.add("-R");
 				list.add(filelist[i]);
