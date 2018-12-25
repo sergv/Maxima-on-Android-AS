@@ -406,22 +406,14 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	@JavascriptInterface
-	public void reuseByTouch(String maximacmd) {
-		class rbttask implements Runnable {
-			String text = "";
-
+	public void reuseByTouch(final String maximacmd) {
+		final String text = substitute(maximacmd, "<br>", "");
+		editText.post(new Runnable () {
 			@Override
 			public void run() {
 				editText.setText(text);
 			}
-
-			public void settext(String tt) {
-				text = tt;
-			}
-		}
-		rbttask viewtask = new rbttask();
-		viewtask.settext(substitute(maximacmd, "<br>", ""));
-		editText.post(viewtask);
+			});
 	}
 
 	@JavascriptInterface
