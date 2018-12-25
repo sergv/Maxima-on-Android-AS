@@ -21,7 +21,6 @@ package jp.yhonda;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
-import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -43,7 +42,6 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
-import android.webkit.MimeTypeMap;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -55,20 +53,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -348,10 +337,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		list.add(internalDir + "/" + CpuArchitecture.getMaximaExecutableName());
 		list.add("--init-lisp=" + internalDir + "/init.lisp");
 
-		maximaProccess = new CommandExec();
 		try {
-			maximaProccess.execCommand(list);
-		} catch (Exception e) {
+			maximaProccess = new CommandExec(list);
+		} catch (IOException e) {
 			Log.d("MoA", "exception2");
 			exitMOA();
 		}
@@ -564,15 +552,14 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			while (isStartQepcadString(resString)) {
 				final List<String> list = new ArrayList<String>();
 				list.add(APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh");
-				final CommandExec qepcadcom = new CommandExec();
 				try {
-					qepcadcom.execCommand(list);
-				} catch (Exception e) {
+					final CommandExec qepcadcom = new CommandExec(list);
+				} catch (IOException e) {
 					Log.d("MoA", "exception7");
 				}
 				try {
 					maximaProccess.maximaCmd("qepcad finished\n");
-				} catch (Exception e) {
+				} catch (IOException e) {
 					Log.d("MoA", "exception8");
 				}
 				resString = maximaProccess.getProcessResult();
@@ -587,10 +574,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 					list.add(internalDir + "/additions/gnuplot/bin/gnuplot");
 				}
 				list.add(internalDir + "/maxout" + maximaProccess.getPID() + ".gnuplot");
-				final CommandExec gnuplotcom = new CommandExec();
 				try {
-					gnuplotcom.execCommand(list);
-				} catch (Exception e) {
+					final CommandExec gnuplotcom = new CommandExec(list);
+				} catch (IOException e) {
 					Log.d("MoA", "exception6");
 				}
 				if ((new File(graphOut)).exists()) {

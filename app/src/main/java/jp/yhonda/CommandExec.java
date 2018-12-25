@@ -17,8 +17,6 @@
  */
 package jp.yhonda;
 
-import android.util.Log;
-
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -26,90 +24,101 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class CommandExec {
-	StringBuilder sb = new StringBuilder(); // output buffer
-	ProcessBuilder builder = null;
-	Process process;
-	InputStream is;
-	OutputStream os;
+	private final StringBuilder sb = new StringBuilder(); // output buffer
+	private final ProcessBuilder builder;
+	private final Process proc;
+	private final InputStream is;
+	private final long pid;
 
-	public void execCommand(List<String> commandList) throws IOException,
-			Exception {
+	public CommandExec (final List<String> commandList) throws IOException {
 		builder = new ProcessBuilder(commandList);
 		// process starts
-		process = builder.start();
-		is = process.getInputStream();
+		proc = builder.start();
+		pid = processPID(proc);
+		is = proc.getInputStream();
 		while (true) {
 			final int c = is.read();
-			if (c == -1) {
-				is.close();
-				break;
+			switch (c) {
+				case -1:
+					is.close();
+					return;
+				case 0x04:
+					return;
+				default:
+					sb.append((char) c);
+					break;
 			}
-			if (c == 0x04) {
-				break;
-			}
-			this.sb.append((char) c);
 		}
 	}
 
-	public void maximaCmd(String mcmd) throws IOException, Exception {
-		if (!mcmd.equals("")) {
+	public void maximaCmd(final String mcmd) throws IOException {
+		if (!mcmd.trim().isEmpty()) {
 			// obtain process standard output stream
-			os = process.getOutputStream();
+			final OutputStream os = proc.getOutputStream();
 			os.write(mcmd.getBytes("UTF-8"));
 			os.flush();
 		}
 		while (true) {
-			int c = is.read();
-			if (c == 0x04) {
+			final int c = is.read();
+			switch (c) {
+			case 0x04:
 				/* 0x04 is the prompt indicator */
 				/*
 				 * if (is.available()==0) { break; }
 				 */
-				break;
-			} else if (c == -1) {
+				return;
+			case -1:
 				is.close();
+				return;
+			case 0x5c:
+				// 0x5c needs to be escaped by 0x5c, the backslash.
+				sb.append((char) c);
+				sb.append((char) c);
 				break;
-			} else if (c == 0x5c) { // 0x5c needs to be escaped by 0x5c, the
-									// backslash.
-				this.sb.append((char) c);
-				this.sb.append((char) c);
-			} else if (c == 0x27) { // 0x27 needs to be escaped as it is q
-									// single quote.
-				this.sb.append((char) 0x5c);
-				this.sb.append((char) c);
-			} else {
-				this.sb.append((char) c);
+			case 0x27:
+				// 0x27 needs to be escaped as it is ' - single quote.
+				sb.append((char) 0x5c);
+				sb.append((char) c);
+				break;
+			default:
+				sb.append((char) c);
 			}
 		}
 	}
 
 	public String getProcessResult() {
-		return (new String(this.sb));
+		return (new String(sb));
 	}
 
 	public void clearStringBuilder() {
-		this.sb.delete(0, this.sb.length());
+		sb.delete(0, sb.length());
 	}
 
-	public String getPID() {
+	public long getPID() {
+		return pid;
+	}
+
+	private static long processPID(final Process proc) {
 		long pid = -1;
 		try {
-			Field f = process.getClass().getDeclaredField("pid");
+			final Field f = proc.getClass().getDeclaredField("pid");
 			f.setAccessible(true);
-			pid = f.getLong(process);
+			pid = f.getLong(proc);
 			f.setAccessible(false);
 		} catch (Exception e) {
 			pid = -1;
 		}
-		if (pid != -1) return (String.valueOf(pid));
+		if (pid != -1) {
+			return pid;
+		}
 		try {
-			Field f = process.getClass().getDeclaredField("id");
+			final Field f = proc.getClass().getDeclaredField("id");
 			f.setAccessible(true);
-			pid = f.getLong(process);
+			pid = f.getLong(proc);
 			f.setAccessible(false);
 		} catch (Exception e) {
 			pid = -1;
 		}
-		return (String.valueOf(pid));
+		return pid;
 	}
 }
