@@ -96,14 +96,14 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		extB.setText(extB.getText() + " (" + String.valueOf(extStorageAvail)
 				+ "MB)");
 
-		final long limitMaximaBinary = 32L;
+		final long limitMaximaBinary = 64L;
 		if (intStorageAvail < limitMaximaBinary) {
 			intB.setEnabled(false);
 			extB.setEnabled(false);
 			okB.setEnabled(false);
 			msg.setText(R.string.internal_storage_insufficient);
 		} else {
-			final long limitAvail = 85L;
+			final long limitAvail = 100L;
 			if (intStorageAvail < limitAvail) {
 				intB.setEnabled(false);
 			}
