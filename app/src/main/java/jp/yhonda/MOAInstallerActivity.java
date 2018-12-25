@@ -169,29 +169,28 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				chmod755(internalDir.getAbsolutePath() + "/additions/qepcad/bin/qepcad");
 				chmod755(internalDir.getAbsolutePath() + "/additions/qepcad/bin/qepcad.x86");
 				chmod755(internalDir.getAbsolutePath() + "/additions/qepcad/qepcad.sh");
-				chmod755(internalDir.getAbsolutePath() + "/additions/cpuarch.sh");
 				CpuArchitecture.initCpuArchitecture();
-				if (CpuArchitecture.getCpuArchitecture().startsWith("not")){
+				if (CpuArchitecture.getCpuArchitecture() == null) {
 					Log.v("MoA","Install of additions failed.");
 					install(10);
 					me.finish();
 				}
 				// Existence of file x86 is used in qepcad.sh
-				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.X86)) {
-					File x86File=new File(internalDir.getAbsolutePath()+"/x86");
+				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
+					final File x86File = new File(internalDir.getAbsolutePath()+"/x86");
 					if (!x86File.exists()) {
 						x86File.createNewFile();
 					}
 				}
-				String maximaFile=CpuArchitecture.getMaximaFile();
-				if (maximaFile.startsWith("not")) {
+				final String maximaFile = CpuArchitecture.getMaximaFile();
+				if (maximaFile == null) {
 					Log.v("MoA","Install of additions failed.");
 					install(10);
 					me.finish();
 				}
-				String initlispPath = internalDir.getAbsolutePath()
+				final String initlispPath = internalDir.getAbsolutePath()
 						+ "/init.lisp";
-				String firstLine = "(setq *maxima-dir* \""
+				final String firstLine = "(setq *maxima-dir* \""
 						+ installedDir.getAbsolutePath() + "/maxima-" + vers
 						+ "\")\n";
 				copyFileFromAssetsToLocal("init.lisp", initlispPath, firstLine);

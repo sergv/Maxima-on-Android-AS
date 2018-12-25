@@ -579,8 +579,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			}
 
 			if (isGraphFile()) {
-				List<String> list = new ArrayList<String>();
-				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.X86)) {
+				final List<String> list = new ArrayList<String>();
+				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
 					list.add(internalDir + "/additions/gnuplot/bin/gnuplot.x86");
 				} else {
 					list.add(internalDir + "/additions/gnuplot/bin/gnuplot");
@@ -803,12 +803,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 	private boolean maximaBinaryExists() {
 		CpuArchitecture.initCpuArchitecture();
-		String res=CpuArchitecture.getMaximaFile();
-		if (res.startsWith("not")) {
+		final String res = CpuArchitecture.getMaximaFile();
+		if (res == null) {
 			return false;
+		} else {
+			return ((new File(internalDir.getAbsolutePath() + "/" + res)).exists());
 		}
-		return((new File(internalDir.getAbsolutePath()+"/"+res)).exists());
-
 	}
 
 	@Override

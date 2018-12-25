@@ -28,61 +28,38 @@ import android.util.Log;
 import jp.yhonda.CommandExec;
 
 public final class CpuArchitecture {
-	static final String X86="x86"; 
-	static final String ARM="arm"; 
-	static final String NOT_SUPPORTED="not supported"; 
-	static final String NOT_INITIALIZED="not initialized"; 
 
-	private static String cpuarch=NOT_INITIALIZED;
-	
+	public enum Arch {
+		x86, arm
+	}
+
+	private static Arch cpuarch = null;
+
 	private CpuArchitecture () {
 	}
-	
-	public static String getCpuArchitecture() {
+
+	public static Arch getCpuArchitecture() {
 		return cpuarch;
 	}
-	
+
 	public static void initCpuArchitecture() {
-		if (! NOT_INITIALIZED.equals(cpuarch)) {
-			return;
-		}
-		if ((new File("/data/data/jp.yhonda/files/additions/cpuarch.sh")).exists()) {
-			CommandExec cmd = new CommandExec();
-			List<String> list = new ArrayList<String>();
-			list.add("/data/data/jp.yhonda/files/additions/cpuarch.sh");
-			try {
-				cmd.execCommand(list);
-			} catch (Exception e) {
-				Log.d("MoA", "CpuArchitecture exception1");
-			}
-			String res=cmd.getProcessResult().trim();
-			if (res.equals(X86)) {
-				cpuarch=X86;
-			} else if (res.equals(ARM)) {
-				cpuarch=ARM;
-			} else if (res.equals(NOT_SUPPORTED)) {
-				cpuarch=NOT_SUPPORTED;
-			}
+		final String arch = System.getProperty("os.arch");
+		if (arch.equals("x86_64") || arch.equals("x86")) {
+			cpuarch = Arch.x86;
+		} else if (arch.equals("armeabi-v7a") || arch.equals("armeabi") || arch.equals("arm64-v8a"))  {
+			cpuarch = Arch.arm;
 		}
 	}
-	
+
 	public static String getMaximaFile() {
-		if (cpuarch.startsWith("not")) {
-			return cpuarch;
+		final String arch;
+		switch (cpuarch) {
+			case x86: arch = ".x86"; break;
+			case arm: arch = "";     break;
+			default:  arch = "";     break;
 		}
-		if (cpuarch.equals(X86)) {
-			if (Build.VERSION.SDK_INT >= 21) { // Lollipop requires pie
-				return("maxima.x86.pie");
-			} else {
-				return("maxima.x86");
-			}
-		} else if (cpuarch.equals(ARM)) {
-			if (Build.VERSION.SDK_INT >= 21) { // Lollipop requires pie
-				return("maxima.pie");
-			} else {
-				return("maxima");
-			}			
-		}
-		return cpuarch;
+		// Lollipop requires pie
+		final String pie = Build.VERSION.SDK_INT >= 21 ? ".pie" : "";
+		return "maxima" + arch + pie;
 	}
 }
