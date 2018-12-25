@@ -333,11 +333,11 @@
    '((mequal simp) $terminal $canvas)
    '((mequal simp) $file_name "/data/data/jp.yhonda/files/maxout"))
 
-;;; /data/local/tmp/maxima-init.mac
-(setq $file_search_maxima
-        ($append '((mlist) "/data/local/tmp/###.{mac,mc}")
-                 $file_search_maxima))
-(if (probe-file "/data/local/tmp/maxima-init.mac") ($load "/data/local/tmp/maxima-init.mac"))
+;;; /sdcard/maxima/maxima-init.mac
+;; (setq $file_search_maxima
+;;       ($append '((mlist) "/sdcard/maxima/###.{mac,mc}")
+;;                $file_search_maxima))
+;; (if (probe-file "/sdcard/maxima/maxima-init.mac") ($load "/sdcard/maxima/maxima-init.mac"))
 
 ;;; lisp-utils/defsystem.lisp must be loaded.
 ($load "lisp-utils/defsystem")
