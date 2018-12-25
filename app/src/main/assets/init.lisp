@@ -312,6 +312,7 @@
 
 ($set_plot_option '((mlist) $plot_format $gnuplot))
 ($set_plot_option '((mlist) $gnuplot_term $canvas))
+($set_plot_option '((mlist) $gnuplot_preamble "set term canvas size 1200,1200; set key font \",24\" spacing 2.5; set tics font \",16\"; "))
 ($set_plot_option '((mlist) $gnuplot_out_file "/data/data/jp.yhonda/files/maxout.html"))
 (setq $draw_graph_terminal '$canvas)
 
