@@ -258,17 +258,13 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 	}
 
 	private void chmod744(final String filename) {
-		final List<String> list = new ArrayList<String>();
-		list.add(systembindir + "chmod");
-		list.add("744");
-		list.add(filename);
-		final CommandExec sce = new CommandExec();
-		try {
-			sce.execCommand(list);
-		} catch (IOException e) {
-			Log.v("MoA","exception chmod744 1");
-		} catch (Exception e) {
-			Log.v("MoA","exception chmod744 2");
+		final File f = new File(filename);
+		final boolean res =
+			f.setExecutable(true, true) &&
+			f.setReadable(true,true) &&
+			f.setWritable(true, true);
+		if (!res) {
+			Log.v("MoA","failed to make file executable: " + filename);
 		}
 	}
 
