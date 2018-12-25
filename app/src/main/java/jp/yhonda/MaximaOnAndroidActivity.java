@@ -84,6 +84,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	Activity thisActivity = this;
 	String maximaURL = null;
 
+	private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
+	private static final String graphOut = APP_DATA_DIR + "/files/maxout.html";
+
 	String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
 	String manen = "file:///android_asset/maxima-doc/en/maxima.html";
 	String mande = "file:///android_asset/maxima-doc/en/de/maxima.html";
@@ -592,8 +595,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				} catch (Exception e) {
 					Log.d("MoA", "exception6");
 				}
-				if ((new File("/data/data/jp.yhonda/files/maxout.html"))
-						.exists()) {
+				if ((new File(graphOut)).exists()) {
 					showGraph();
 				}
 			}
@@ -755,8 +757,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void showGraph() {
-		if ((new File("/data/data/jp.yhonda/files/maxout.html")).exists()) {
-			showHTML("file:///data/data/jp.yhonda/files/maxout.html", false);
+		if ((new File(graphOut)).exists()) {
+			showHTML("file://" + graphOut, false);
 		} else {
 			Toast.makeText(this, getString(R.string.toast_no_graph), Toast.LENGTH_LONG).show();
 		}
@@ -767,7 +769,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		if (a.exists()) {
 			a.delete();
 		}
-		a = new File("/data/data/jp.yhonda/files/maxout.html");
+		a = new File(graphOut);
 		if (a.exists()) {
 			a.delete();
 		}
