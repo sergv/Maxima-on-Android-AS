@@ -73,8 +73,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	String maximaURL = null;
 
 	private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
-	private static final String graphOut = APP_DATA_DIR + "/files/maxout.html";
-
+	private static final String GNUPLOT_OUT = APP_DATA_DIR + "/files/maxout.html";
+	private static final String QUEPCAD_INPUT = APP_DATA_DIR + "/files/qepcad_input.txt";
+	private static final String QEPCAD_SCRIPT = APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh";
 	private static final String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
 	private static final String manen = "file:///android_asset/maxima-doc/en/maxima.html";
 	private static final String mande = "file:///android_asset/maxima-doc/en/de/maxima.html";
@@ -533,7 +534,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			maximaProccess.clearStringBuilder();
 			while (isStartQepcadString(resString)) {
 				final List<String> qepcadCmd = new ArrayList<String>();
-				qepcadCmd.add(APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh");
+				qepcadCmd.add(QEPCAD_SCRIPT);
 				try {
 					new CommandExec(qepcadCmd);
 				} catch (IOException e) {
@@ -561,7 +562,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				} catch (IOException e) {
 					Log.d("MoA", "exception6");
 				}
-				if (FileUtils.exists(graphOut)) {
+				if (FileUtils.exists(GNUPLOT_OUT)) {
 					showGraph();
 				}
 			}
@@ -723,8 +724,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void showGraph() {
-		if (FileUtils.exists(graphOut)) {
-			showHTML("file://" + graphOut, false);
+		if (FileUtils.exists(GNUPLOT_OUT)) {
+			showHTML("file://" + GNUPLOT_OUT, false);
 		} else {
 			Toast.makeText(this, getString(R.string.toast_no_graph), Toast.LENGTH_LONG).show();
 		}
@@ -735,17 +736,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void removeTmpFiles() {
-		File a = new File(gnuplotInputFile());
-		if (a.exists()) {
-			a.delete();
-		}
-		a = new File(graphOut);
-		if (a.exists()) {
-			a.delete();
-		}
-		a = new File(APP_DATA_DIR + "/files/qepcad_input.txt");
-		if (a.exists()) {
-			a.delete();
+		final String tmpFiles[] = { gnuplotInputFile(), GNUPLOT_OUT, QUEPCAD_INPUT };
+		for (final String path : tmpFiles) {
+			final File f = new File(path);
+			if (f.exists()) {
+				f.delete();
+			}
 		}
 	}
 
