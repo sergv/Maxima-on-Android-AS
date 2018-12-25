@@ -50,7 +50,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 	private long extStorageAvail;
 	private Activity me;
 	public Activity parent;
-	String systembindir = "/system/bin/";
+	private String systembindir = "/system/bin/";
 
 	private long internalFlashAvail() {
 		StatFs fs = new StatFs(internalDir.getAbsolutePath());
@@ -96,14 +96,14 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		extB.setText(extB.getText() + " (" + String.valueOf(extStorageAvail)
 				+ "MB)");
 
-		long limitMaximaBinary = 32L;
+		final long limitMaximaBinary = 32L;
 		if (intStorageAvail < limitMaximaBinary) {
 			intB.setEnabled(false);
 			extB.setEnabled(false);
 			okB.setEnabled(false);
 			msg.setText(R.string.internal_storage_insufficient);
 		} else {
-			long limitAvail = 85L;
+			final long limitAvail = 85L;
 			if (intStorageAvail < limitAvail) {
 				intB.setEnabled(false);
 			}
@@ -192,7 +192,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 						+ "\")\n";
 				copyFileFromAssetsToLocal("init.lisp", initlispPath, firstLine);
 				Log.d("My Test", "Clicked!1.1");
-				UnzipAsyncTask uzt = new UnzipAsyncTask(this);
+				final UnzipAsyncTask uzt = new UnzipAsyncTask(this);
 				uzt.setParams(this.getAssets().open(maximaFile + ".zip"),
 						internalDir.getAbsolutePath(), getString(R.string.install_maxima_binary),
 						"maxima binary installed");
@@ -201,7 +201,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 			}
 			case 2: {
 				chmod744(internalDir.getAbsolutePath() + "/" + CpuArchitecture.getMaximaExecutableName());
-				UnzipAsyncTask uzt = new UnzipAsyncTask(this);
+				final UnzipAsyncTask uzt = new UnzipAsyncTask(this);
 				uzt.setParams(this.getAssets().open("maxima-" + vers + ".zip"),
 						installedDir.getAbsolutePath(), getString(R.string.install_maxima_data),
 						"maxima data installed");

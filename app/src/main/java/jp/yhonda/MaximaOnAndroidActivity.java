@@ -164,7 +164,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		webview.addJavascriptInterface(this, "MOA");
 
 		editText = (MultiAutoCompleteTextView) findViewById(R.id.editText1);
-		editText.setTextSize((float) Integer.parseInt(settings.getString("fontSize1","20")));
+		editText.setTextSize((float) Integer.parseInt(settings.getString("fontSize1", "20")));
 		final Boolean bflag = settings.getBoolean("auto_completion_check_box_pref", true);
 		editText.setThreshold(bflag ? 2 : 100);
 		editText.setOnEditorActionListener(this);
@@ -187,10 +187,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			}
 		});
 
-		MaximaVersion prevVers = new MaximaVersion();
+		final MaximaVersion prevVers = new MaximaVersion();
 		prevVers.loadVersFromSharedPrefs(this);
-		long verNo = prevVers.versionInteger();
-		long thisVerNo = mvers.versionInteger();
+		final long verNo = prevVers.versionInteger();
+		final long thisVerNo = mvers.versionInteger();
 
 		if ((thisVerNo > verNo)
 				|| !maximaBinaryExists()
@@ -411,8 +411,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		if (oNumStr.equals("nolabel")) {
 			return;
 		}
-		String olabel="$%"+oNumStr;
-		String cmdstr=":lisp ($printf nil \"$$$$$$ R0 ~a $$$$$$\" "+olabel+")";
+		final String olabel = "$%" + oNumStr;
+		final String cmdstr = ":lisp ($printf nil \"$$$$$$ R0 ~a $$$$$$\" " + olabel + ")";
 		try {
 			maximaProccess.maximaCmd(cmdstr + "\n");
 		} catch (IOException e) {
@@ -441,12 +441,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 	@JavascriptInterface
 	public void scrollToEnd() {
-		Handler handler = new Handler();
-		Runnable task = new Runnable() {
+		final Handler handler = new Handler();
+		final Runnable task = new Runnable() {
 
 			@Override
 			public void run() {
-				Runnable viewtask = new Runnable() {
+				final Runnable viewtask = new Runnable() {
 					@Override
 					public void run() {
 						scview.fullScroll(ScrollView.FOCUS_DOWN);
@@ -616,9 +616,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		return substitute(cmd, "'", "\\'");
 	}
 
-	private void displayMaximaCmdResults(String resString) {
+	private void displayMaximaCmdResults(final String resString) {
 		Log.v("MoA cmd", resString);
-		String[] resArray = resString.split("\\$\\$\\$\\$\\$\\$");
+		final String[] resArray = resString.split("\\$\\$\\$\\$\\$\\$");
 		for (int i = 0; i < resArray.length; i++) {
 			if (i % 2 == 0) {
 				/* normal text, as we are outside of $$$$$$...$$$$$$ */
@@ -639,8 +639,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			}
 		}
 		if (allExampleFinished == true) {
-			Toast.makeText(this, "All examples are executed.",
-					Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "All examples are executed.", Toast.LENGTH_LONG).show();
 			allExampleFinished = false;
 		}
 		//Delete temporary script file:
