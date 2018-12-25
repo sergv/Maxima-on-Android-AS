@@ -533,13 +533,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 					return true;
 				}
 				if (cmdstr.equals("man;")) {
-					showHTML("file://" + internalDir
-							+ "/additions/en/maxima.html", true);
+					showHTML("file://" + internalDir + "/additions/en/maxima.html", true);
 					return true;
 				}
 				if (cmdstr.equals("manj;")) {
-					showHTML("file://" + internalDir
-							+ "/additions/ja/maxima.html", true);
+					showHTML("file://" + internalDir + "/additions/ja/maxima.html", true);
 					return true;
 				}
 
@@ -901,10 +899,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 	private void sessionMenu(String cmd) {
 		editText.setText(cmd);
-		editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,
-				KeyEvent.KEYCODE_ENTER));
-		editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP,
-				KeyEvent.KEYCODE_ENTER));
+		editText.dispatchKeyEvent(
+			new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
+		editText.dispatchKeyEvent(
+			new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
 	}
 
 	private void selectScriptFile() {
