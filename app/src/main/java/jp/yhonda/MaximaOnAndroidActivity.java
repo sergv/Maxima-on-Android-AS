@@ -749,10 +749,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 	}
 
-	private Boolean isQepcadFile() {
-		return FileUtils.exists(APP_DATA_DIR + "/files/qepcad_input.txt");
-	}
-
 	private void exitMOA() {
 		try {
 			maximaProccess.maximaCmd("quit();\n");
