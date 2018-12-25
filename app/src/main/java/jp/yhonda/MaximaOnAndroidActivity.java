@@ -322,12 +322,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			!(FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
 			this.finish();
 		}
-		final List<String> list = new ArrayList<String>();
-		list.add(internalDir + "/" + CpuArchitecture.getMaximaExecutableName());
-		list.add("--init-lisp=" + internalDir + "/init.lisp");
+		final List<String> maximaCmd = new ArrayList<String>();
+		maximaCmd.add(internalDir + "/" + CpuArchitecture.getMaximaExecutableName());
+		maximaCmd.add("--init-lisp=" + internalDir + "/init.lisp");
 
 		try {
-			maximaProccess = new CommandExec(list);
+			maximaProccess = new CommandExec(maximaCmd);
 		} catch (IOException e) {
 			Log.d("MoA", "exception2");
 			exitMOA();
@@ -531,10 +531,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			String resString = maximaProccess.getProcessResult();
 			maximaProccess.clearStringBuilder();
 			while (isStartQepcadString(resString)) {
-				final List<String> list = new ArrayList<String>();
-				list.add(APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh");
+				final List<String> qepcadCmd = new ArrayList<String>();
+				qepcadCmd.add(APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh");
 				try {
-					final CommandExec qepcadcom = new CommandExec(list);
+					new CommandExec(qepcadCmd);
 				} catch (IOException e) {
 					Log.d("MoA", "exception7");
 				}
@@ -548,15 +548,15 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			}
 
 			if (isGraphFile()) {
-				final List<String> list = new ArrayList<String>();
+				final List<String> gnuplotCmd = new ArrayList<String>();
 				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
-					list.add(internalDir + "/additions/gnuplot/bin/gnuplot.x86");
+					gnuplotCmd.add(internalDir + "/additions/gnuplot/bin/gnuplot.x86");
 				} else {
-					list.add(internalDir + "/additions/gnuplot/bin/gnuplot");
+					gnuplotCmd.add(internalDir + "/additions/gnuplot/bin/gnuplot");
 				}
-				list.add(internalDir + "/maxout" + maximaProccess.getPID() + ".gnuplot");
+				gnuplotCmd.add(internalDir + "/maxout" + maximaProccess.getPID() + ".gnuplot");
 				try {
-					final CommandExec gnuplotcom = new CommandExec(list);
+					new CommandExec(gnuplotCmd);
 				} catch (IOException e) {
 					Log.d("MoA", "exception6");
 				}
