@@ -86,7 +86,7 @@ public class HTMLActivity extends AppCompatActivity {
 	}
 
 	public void loadURLonCreate() {
-		final File f = new File("/data/data/jp.yhonda/files/maxout.html");
+		final File f = new File("/data/data/jp.yhonda/files/tmp/maxout.html");
 		if (f.exists()) {
 			Log.v("MoA", "loadURLonCreate" + String.valueOf(f.length()));
 		}

@@ -59,7 +59,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
@@ -72,10 +71,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	int mcmdArrayIndex = 0;
 	String maximaURL = null;
 
-	private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
-	private static final String GNUPLOT_OUT = APP_DATA_DIR + "/files/maxout.html";
-	private static final String QUEPCAD_INPUT = APP_DATA_DIR + "/files/qepcad_input.txt";
+	private static final String APP_DATA_DIR  = "/data/data/jp.yhonda";
 	private static final String QEPCAD_SCRIPT = APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh";
+
+	private static final String APP_DATA_TMP_DIR	= APP_DATA_DIR + "/files/tmp";
+	private static final String GNUPLOT_OUT			= APP_DATA_TMP_DIR + "/maxout.html";
+	private static final String QUEPCAD_INPUT		= APP_DATA_TMP_DIR + "/qepcad_input.txt";
+
 	private static final String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
 	private static final String manen = "file:///android_asset/maxima-doc/en/maxima.html";
 	private static final String mande = "file:///android_asset/maxima-doc/en/de/maxima.html";
@@ -512,8 +514,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 					return true;
 				}
 
-				removeTmpFiles();
+				prepareTmpDir();
 				cmdstr = maxima_syntax_check(cmdstr);
+				Log.d("MoA", "Sending command " + cmdstr);
 				maximaProccess.maximaCmd(cmdstr + "\n");
 			} catch (IOException e) {
 				Log.d("MoA", "exception4");
@@ -549,6 +552,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				maximaProccess.clearStringBuilder();
 			}
 
+			Log.d("MoA", "onEditorAction: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
 			if (FileUtils.exists(gnuplotInputFile())) {
 				final List<String> gnuplotCmd = new ArrayList<String>();
 				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
@@ -558,10 +562,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				}
 				gnuplotCmd.add(gnuplotInputFile());
 				try {
+					Log.d("MoA", "onEditorAction: starting gnuplot command " + gnuplotCmd);
 					new CommandExec(gnuplotCmd);
+					Log.d("MoA", "onEditorAction: started gnuplot command");
 				} catch (IOException e) {
 					Log.d("MoA", "exception6");
 				}
+				Log.d("MoA", "onEditorAction: file " + GNUPLOT_OUT + " exists: " + FileUtils.exists(GNUPLOT_OUT));
 				if (FileUtils.exists(GNUPLOT_OUT)) {
 					showGraph();
 				}
@@ -724,6 +731,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void showGraph() {
+		Log.d("MoA", "showGraph: started");
+		Log.d("MoA", "showGraph: file " + GNUPLOT_OUT + " exists: " + FileUtils.exists(GNUPLOT_OUT));
 		if (FileUtils.exists(GNUPLOT_OUT)) {
 			showHTML("file://" + GNUPLOT_OUT, false);
 		} else {
@@ -731,18 +740,23 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 	}
 
+	// Get maxima's gnuplot graph specification that should be passed to the gnuplot executable.
+	// Maxima names this output file using it's PID, so don't simplify this function too much.
 	private String gnuplotInputFile() {
-		// return APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot";
-		return APP_DATA_DIR + "/files/maxout.gnuplot";
+		return APP_DATA_TMP_DIR + "/maxout" + maximaProccess.getPID() + ".gnuplot";
 	}
 
-	private void removeTmpFiles() {
-		final String tmpFiles[] = { gnuplotInputFile(), GNUPLOT_OUT, QUEPCAD_INPUT };
-		for (final String path : tmpFiles) {
-			final File f = new File(path);
-			if (f.exists()) {
+	private void prepareTmpDir() {
+		final File tmpDir = new File(APP_DATA_TMP_DIR);
+		if (tmpDir.isFile()) {
+			tmpDir.delete();
+			tmpDir.mkdir();
+		} else if (tmpDir.isDirectory()) {
+			for (final File f : tmpDir.listFiles()) {
 				f.delete();
 			}
+		} else {
+			tmpDir.mkdir();
 		}
 	}
 

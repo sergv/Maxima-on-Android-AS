@@ -22,11 +22,12 @@
 
 ;;; set up maxima_tempdir
 (ensure-directories-exist "/data/data/jp.yhonda/files/")
+(ensure-directories-exist "/data/data/jp.yhonda/files/tmp/")
 
 (defun maxima::getpid () (si::getpid))
 (defun maxima-getenv (a)
     (cond ((string-equal a "MAXIMA_PREFIX") *maxima-dir*)
-          ((string-equal a "MAXIMA_TEMPDIR") "/data/data/jp.yhonda/files/")))
+          ((string-equal a "MAXIMA_TEMPDIR") "/data/data/jp.yhonda/files/tmp/")))
 (setq *maxima-default-layout-autotools* "false")
 (setq *autoconf-prefix* *maxima-dir*)
 (setq *maxima-source-root* *maxima-dir*)
@@ -291,14 +292,14 @@
   (if (not (boundp '$qepcad_input_file))
       (add2lnc '$qepcad_input_file $values))
   (defparameter $qepcad_input_file
-                "/data/data/jp.yhonda/files/qepcad_input.txt")
+                "/data/data/jp.yhonda/files/tmp/qepcad_input.txt")
   (if (not (boundp '$qepcad_output_file))
       (add2lnc '$qepcad_output_file $values))
   (defparameter $qepcad_output_file
-                "/data/data/jp.yhonda/files/qepcad_output.txt")
+                "/data/data/jp.yhonda/files/tmp/qepcad_output.txt")
   (if (not (boundp '$qepcad_file_pattern))
       (add2lnc '$qepcad_file_pattern $values))
-  (defparameter $qepcad_file_pattern "/data/data/jp.yhonda/files/qepcad*.txt")
+  (defparameter $qepcad_file_pattern "/data/data/jp.yhonda/files/tmp/qepcad*.txt")
   (if (not (boundp '$qepcad_option))
       (add2lnc '$qepcad_option $values))
   (defparameter $qepcad_option " +N20000000 +L100000 "))
@@ -313,7 +314,7 @@
 ($set_plot_option '((mlist) $plot_format $gnuplot))
 ($set_plot_option '((mlist) $gnuplot_term $canvas))
 ($set_plot_option '((mlist) $gnuplot_preamble "set term canvas size 1200,1200; set key font \",24\" spacing 2.5; set tics font \",16\"; "))
-($set_plot_option '((mlist) $gnuplot_out_file "/data/data/jp.yhonda/files/maxout.html"))
+($set_plot_option '((mlist) $gnuplot_out_file "/data/data/jp.yhonda/files/tmp/maxout.html"))
 (setq $draw_graph_terminal '$canvas)
 
 ;;; display support
@@ -332,7 +333,7 @@
 
 ($set_draw_defaults
    '((mequal simp) $terminal $canvas)
-   '((mequal simp) $file_name "/data/data/jp.yhonda/files/maxout"))
+   '((mequal simp) $file_name "/data/data/jp.yhonda/files/tmp/maxout"))
 
 ;;; /sdcard/maxima/maxima-init.mac
 ;; (setq $file_search_maxima
