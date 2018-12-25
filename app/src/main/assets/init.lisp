@@ -315,7 +315,7 @@
 ($set_plot_option '((mlist) $gnuplot_out_file "/data/data/jp.yhonda/files/maxout.html"))
 (setq $draw_graph_terminal '$canvas)
 
-;;; displa support
+;;; display support
 ($load '$stringproc)
 (setq $display2d '$imaxima)
 (let ((old-displa (symbol-function 'maxima::displa)))
