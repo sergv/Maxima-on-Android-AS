@@ -193,12 +193,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		if ((thisVerNo > verNo)
 				|| !maximaBinaryExists()
-				|| !((new File(internalDir + "/additions")).exists())
-				|| !((new File(internalDir + "/init.lisp")).exists())
-				|| (!(new File(internalDir + "/maxima-" + mvers.versionString()))
-						.exists() && !(new File(externalDir + "/maxima-"
-						+ mvers.versionString())).exists())) {
-			Intent intent = new Intent(this, MOAInstallerActivity.class);
+				|| !FileUtils.exists(internalDir + "/additions")
+				|| !FileUtils.exists(internalDir + "/init.lisp")
+				|| (!FileUtils.exists(internalDir + "/maxima-" + mvers.versionString()) &&
+					!FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
+			final Intent intent = new Intent(this, MOAInstallerActivity.class);
 			intent.setAction(Intent.ACTION_VIEW);
 			intent.putExtra("version", mvers.versionString());
 			this.startActivityForResult(intent, 0);
@@ -323,14 +322,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		CpuArchitecture.initCpuArchitecture();
 
-		/*
-		webview.loadUrl(maximaURL);
-		*/
 		runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl(maximaURL);}});
-		if (!(new File(internalDir + "/maxima-" + mvers.versionString()))
-				.exists()
-				&& !(new File(externalDir + "/maxima-" + mvers.versionString()))
-						.exists()) {
+		if (!(FileUtils.exists(internalDir + "/maxima-" + mvers.versionString())) &&
+			!(FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
 			this.finish();
 		}
 		final List<String> list = new ArrayList<String>();
@@ -571,7 +565,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				} catch (IOException e) {
 					Log.d("MoA", "exception6");
 				}
-				if ((new File(graphOut)).exists()) {
+				if (FileUtils.exists(graphOut)) {
 					showGraph();
 				}
 			}
@@ -733,7 +727,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void showGraph() {
-		if ((new File(graphOut)).exists()) {
+		if (FileUtils.exists(graphOut)) {
 			showHTML("file://" + graphOut, false);
 		} else {
 			Toast.makeText(this, getString(R.string.toast_no_graph), Toast.LENGTH_LONG).show();
@@ -756,13 +750,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private Boolean isGraphFile() {
-		final File a = new File(APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot");
-		return (a.exists());
+		return FileUtils.exists(APP_DATA_DIR + "/files/maxout" + maximaProccess.getPID() + ".gnuplot");
 	}
 
 	private Boolean isQepcadFile() {
-		final File a = new File(APP_DATA_DIR + "/files/qepcad_input.txt");
-		return (a.exists());
+		return FileUtils.exists(APP_DATA_DIR + "/files/qepcad_input.txt");
 	}
 
 	private void exitMOA() {

@@ -82,7 +82,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		extB = (RadioButton) findViewById(R.id.radioButton2);
 		rgroup = (RadioGroup) findViewById(R.id.radiogroup);
 		msg = (TextView) findViewById(R.id.checkedTextView1);
-		if ((new File("/system/xbin/chmod")).exists()) {
+		if (FileUtils.exists("/system/xbin/chmod")) {
 			// Support for CyanogenMod
 			systembindir = "/system/xbin/";
 		}
@@ -269,24 +269,25 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		final MaximaVersion prevVers = new MaximaVersion();
 		prevVers.loadVersFromSharedPrefs(this);
 		final String maximaDirName = "/maxima-" + prevVers.versionString();
+		final String internalAbsPath = internalDir.getAbsolutePath();
+		final File internalPrevDir = new File(internalAbsPath + maximaDirName);
+		final File externalPrevDir = externalDir == null ? null : new File(externalDir.getAbsolutePath() + maximaDirName);
 		final String maximaDirPath;
-		if ((new File(internalDir.getAbsolutePath() + maximaDirName)).exists()) {
-			maximaDirPath = internalDir.getAbsolutePath() + maximaDirName;
-		} else if ((externalDir != null)
-				&& (new File(externalDir.getAbsolutePath() + maximaDirName))
-						.exists()) {
-			maximaDirPath = externalDir.getAbsolutePath() + maximaDirName;
+		if (internalPrevDir.exists()) {
+			maximaDirPath = internalPrevDir.getAbsolutePath();
+		} else if (externalPrevDir != null && externalPrevDir.exists()) {
+			maximaDirPath = externalPrevDir.getAbsolutePath();
 		} else {
 			maximaDirPath = null;
 		}
 		final String filelist[] = {
-				internalDir.getAbsolutePath() + "/init.lisp",
-				internalDir.getAbsolutePath() + "/x86",
-				internalDir.getAbsolutePath() + "/maxima",
-				internalDir.getAbsolutePath() + "/maxima.x86",
-				internalDir.getAbsolutePath() + "/maxima.pie",
-				internalDir.getAbsolutePath() + "/maxima.x86.pie",
-				internalDir.getAbsolutePath() + "/additions",
+				internalAbsPath + "/init.lisp",
+				internalAbsPath + "/x86",
+				internalAbsPath + "/maxima",
+				internalAbsPath + "/maxima.x86",
+				internalAbsPath + "/maxima.pie",
+				internalAbsPath + "/maxima.x86.pie",
+				internalAbsPath + "/additions",
 				maximaDirPath
 			};
 		for (final String path : filelist) {
