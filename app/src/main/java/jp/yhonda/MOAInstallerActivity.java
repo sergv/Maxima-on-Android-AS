@@ -164,11 +164,11 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				break;
 			}
 			case 1: {
-				chmod755(internalDir.getAbsolutePath() + "/additions/gnuplot/bin/gnuplot");
-				chmod755(internalDir.getAbsolutePath() + "/additions/gnuplot/bin/gnuplot.x86");
-				chmod755(internalDir.getAbsolutePath() + "/additions/qepcad/bin/qepcad");
-				chmod755(internalDir.getAbsolutePath() + "/additions/qepcad/bin/qepcad.x86");
-				chmod755(internalDir.getAbsolutePath() + "/additions/qepcad/qepcad.sh");
+				chmod744(internalDir.getAbsolutePath() + "/additions/gnuplot/bin/gnuplot");
+				chmod744(internalDir.getAbsolutePath() + "/additions/gnuplot/bin/gnuplot.x86");
+				chmod744(internalDir.getAbsolutePath() + "/additions/qepcad/bin/qepcad");
+				chmod744(internalDir.getAbsolutePath() + "/additions/qepcad/bin/qepcad.x86");
+				chmod744(internalDir.getAbsolutePath() + "/additions/qepcad/qepcad.sh");
 				CpuArchitecture.initCpuArchitecture();
 				if (CpuArchitecture.getCpuArchitecture() == null) {
 					Log.v("MoA","Install of additions failed.");
@@ -203,7 +203,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				break;
 			}
 			case 2: {
-				chmod755(internalDir.getAbsolutePath() + "/" + CpuArchitecture.getMaximaExecutableName());
+				chmod744(internalDir.getAbsolutePath() + "/" + CpuArchitecture.getMaximaExecutableName());
 				UnzipAsyncTask uzt = new UnzipAsyncTask(this);
 				uzt.setParams(this.getAssets().open("maxima-" + vers + ".zip"),
 						installedDir.getAbsolutePath(), getString(R.string.install_maxima_data),
@@ -257,7 +257,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		fileInputStream.close();
 	}
 
-	private void chmod755(final String filename) {
+	private void chmod744(final String filename) {
 		final List<String> list = new ArrayList<String>();
 		list.add(systembindir + "chmod");
 		list.add("744");
@@ -266,9 +266,9 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		try {
 			sce.execCommand(list);
 		} catch (IOException e) {
-			Log.v("MoA","exception chmod755 1");
+			Log.v("MoA","exception chmod744 1");
 		} catch (Exception e) {
-			Log.v("MoA","exception chmod755 2");
+			Log.v("MoA","exception chmod744 2");
 		}
 	}
 
