@@ -67,7 +67,7 @@ import java.util.regex.Pattern;
 
 public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		TextView.OnEditorActionListener, OnTouchListener {
-	boolean inited=false; /* expSize initialize is done or not */
+	boolean initialised = false; /* expSize initialize is done or not */
 	String[] mcmdArray = null; /* manual example input will be stored. */
 	int mcmdArrayIndex = 0;
 	String maximaURL = null;
@@ -468,15 +468,15 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			exitMOA();
 		}
 		sem.release();
-		if (!inited) {
-			SharedPreferences settings = PreferenceManager
-					.getDefaultSharedPreferences(thisActivity);
+		if (!initialised) {
+			final SharedPreferences settings =
+				PreferenceManager.getDefaultSharedPreferences(this);
 			final String newsize = settings.getString("fontSize2", "");
 			if (!newsize.equals("")) {
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");}});
 				// webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");
 			}
-			inited = true;
+			initialised = true;
 		}
 
 		Log.v("MoA", "sem released");
