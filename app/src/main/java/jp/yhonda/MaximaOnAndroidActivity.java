@@ -472,19 +472,19 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			final SharedPreferences settings =
 				PreferenceManager.getDefaultSharedPreferences(this);
 			final String newsize = settings.getString("fontSize2", "");
-			if (!newsize.equals("")) {
-				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");}});
+			if (!newsize.trim().isEmpty()) {
+				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.ChangeExpSize(" + newsize + ")");}});
 				// webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");
 			}
 			initialised = true;
 		}
 
 		Log.v("MoA", "sem released");
-		String cmdstr = editText.getText().toString();
+		String cmdstr = editText.getText().toString().trim();
 		if ((keyEvent == null) || (keyEvent.getAction() == KeyEvent.ACTION_UP)) {
 			try {
 				// cmdstr = editText.getText().toString();
-				if (cmdstr.equals("")) {
+				if (cmdstr.isEmpty()) {
 					return true;
 				}
 				if (cmdstr.equals("reload;")) {
@@ -621,8 +621,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		for (int i = 0; i < resArray.length; i++) {
 			if (i % 2 == 0) {
 				/* normal text, as we are outside of $$$$$$...$$$$$$ */
-				if (resArray[i].equals(""))
+				if (resArray[i].trim().isEmpty()) {
 					continue;
+				}
 				final String htmlStr = substitute(resArray[i], "\n", "<br>");
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.UpdateText('" + htmlStr + "')");}});
 				// webview.loadUrl("javascript:window.UpdateText('" + htmlStr + "')");
