@@ -94,7 +94,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	CommandExec maximaProccess;
 	File internalDir;
 	File externalDir;
-	MaximaVersion mvers = new MaximaVersion(5, 40, 0);
+	final MaximaVersion mvers = new MaximaVersion(5, 41, 0);
 
 	private static final int READ_REQUEST_CODE = 42;
 	// File to be deleted on exit.

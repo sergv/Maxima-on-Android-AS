@@ -58,8 +58,9 @@ public final class CpuArchitecture {
 			case arm: arch = "";     break;
 			default:  arch = "";     break;
 		}
-		// Lollipop requires pie
-		final String pie = Build.VERSION.SDK_INT >= 21 ? ".pie" : "";
+		// Lollipop requires PIE + newer versions of MoA don't bundle non-PIE
+		// executables.
+		final String pie = ".pie";
 		return "maxima" + arch + pie;
 	}
 }
