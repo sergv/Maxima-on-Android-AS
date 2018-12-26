@@ -781,3 +781,5 @@
            (multiple-value-setq (c y b) (cdinf y b nil))
            (multiple-value-setq (dummy y a) (fpgcdco y a))
            (cons (ptimes x a) (ptimeschk y (ptimeschk c b)))))))
+
+($load "qepmax")
