@@ -34,6 +34,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import android.helpers.Util;
+
 public class HTMLActivity extends AppCompatActivity {
 	public String urlonCreate = null;
 	WebView webview = null;
@@ -42,6 +44,7 @@ public class HTMLActivity extends AppCompatActivity {
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.htmlactivity);
+		Util.dimUIWith(findViewById(R.id.htmlactivity_toplevel));
 		webview = (WebView) findViewById(R.id.webViewInHTMLActivity);
 		webview.getSettings().setJavaScriptEnabled(true);
 		webview.setWebViewClient(new WebViewClient() {

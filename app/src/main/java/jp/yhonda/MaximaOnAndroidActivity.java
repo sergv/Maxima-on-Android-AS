@@ -65,6 +65,8 @@ import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import android.helpers.Util;
+
 public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		TextView.OnEditorActionListener, OnTouchListener {
 	boolean initialised = false; /* expSize initialize is done or not */
@@ -123,6 +125,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		manURL = pref.getString("manURL", manen);
 
 		setContentView(R.layout.main);
+		Util.dimUIWith(findViewById(R.id.maxima_on_android_toplevel));
+
 		internalDir = this.getFilesDir();
 		externalDir = this.getExternalFilesDir(null);
 
