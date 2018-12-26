@@ -335,7 +335,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		try {
 			maximaProccess = new CommandExec(maximaCmd);
 		} catch (IOException e) {
-			Log.d("MoA", "exception2");
+			Log.d("MoA", "Exception while initialising maxima process: " + e);
 			exitMOA();
 		}
 		maximaProccess.clearStringBuilder();
