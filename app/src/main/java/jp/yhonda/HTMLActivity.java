@@ -18,9 +18,7 @@
 
 package jp.yhonda;
 
-import java.io.File;
-
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -31,6 +29,7 @@ import android.view.View;
 import android.webkit.ConsoleMessage;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -40,18 +39,27 @@ public class HTMLActivity extends AppCompatActivity {
 	public String urlonCreate = null;
 	WebView webview = null;
 
+	@SuppressLint("SetJavaScriptEnabled")
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.htmlactivity);
 		Util.dimUIWith(findViewById(R.id.htmlactivity_toplevel));
 		webview = (WebView) findViewById(R.id.webViewInHTMLActivity);
-		webview.getSettings().setJavaScriptEnabled(true);
+		final WebSettings settings = webview.getSettings();
+		settings.setJavaScriptEnabled(true);
 		webview.setWebViewClient(new WebViewClient() {
 		});
-		webview.getSettings().setBuiltInZoomControls(true);
-		webview.getSettings().setUseWideViewPort(true);
-		webview.getSettings().setLoadWithOverviewMode(true);
+		settings.setUseWideViewPort(true);
+		settings.setLoadWithOverviewMode(true);
+
+		settings.setBuiltInZoomControls(true);
+		settings.setDefaultZoom(WebSettings.ZoomDensity.FAR);
+		settings.setSupportZoom(true);
+
+		// Disable Flash
+		settings.setPluginState(WebSettings.PluginState.OFF);
+
 		webview.addJavascriptInterface(this, "MOA");
 		webview.setWebChromeClient(new WebChromeClient() {
 			public boolean onConsoleMessage(ConsoleMessage cm) {
@@ -76,23 +84,17 @@ public class HTMLActivity extends AppCompatActivity {
 
 	@JavascriptInterface
 	public void setFocus() {
-		class focussor implements Runnable {
+		Log.v("MoA HTML", "setFocus is called");
+		webview.post(new Runnable () {
 			@Override
 			public void run() {
 				webview.requestFocus(View.FOCUS_DOWN);
 				webview.loadUrl("javascript:textarea1Focus();");
 			}
-		}
-		Log.v("MoA HTML", "setFocus is called");
-		focussor ftask = new focussor();
-		webview.post(ftask);
+			});
 	}
 
-	public void loadURLonCreate() {
-		final File f = new File("/data/data/jp.yhonda/files/tmp/maxout.html");
-		if (f.exists()) {
-			Log.v("MoA", "loadURLonCreate" + String.valueOf(f.length()));
-		}
+	private void loadURLonCreate() {
 		final Intent origIntent = this.getIntent();
 		final String urlonCreate = origIntent.getStringExtra("url");
 		webview.setContentDescription(urlonCreate);

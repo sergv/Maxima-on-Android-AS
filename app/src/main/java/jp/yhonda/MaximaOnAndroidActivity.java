@@ -57,7 +57,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.ProcessBuilder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +78,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	private static final String QEPCAD_DIR   = APP_DATA_DIR + "/files/additions/qepcad";
 
 	private static final String APP_DATA_TMP_DIR = APP_DATA_DIR + "/files/tmp";
-	private static final String GNUPLOT_OUT      = APP_DATA_TMP_DIR + "/maxout.html";
+	private static final String GNUPLOT_OUT      = APP_DATA_TMP_DIR + "/maxout.svg";
 	private static final String QUEPCAD_INPUT    = APP_DATA_TMP_DIR + "/qepcad_input.txt";
 
 	private static final String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
@@ -579,7 +578,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				}
 				Log.d("MoA", "onEditorAction: file " + GNUPLOT_OUT + " exists: " + FileUtils.exists(GNUPLOT_OUT));
 				if (FileUtils.exists(GNUPLOT_OUT)) {
-					showGraph();
+					showGraph(GNUPLOT_OUT);
 				}
 			}
 
@@ -739,11 +738,14 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		this.startActivityForResult(intent, 0);
 	}
 
-	private void showGraph() {
+	private void showGraph(final String path) {
 		Log.d("MoA", "showGraph: started");
-		Log.d("MoA", "showGraph: file " + GNUPLOT_OUT + " exists: " + FileUtils.exists(GNUPLOT_OUT));
-		if (FileUtils.exists(GNUPLOT_OUT)) {
-			showHTML("file://" + GNUPLOT_OUT, false);
+		Log.d("MoA", "showGraph: graph file " + path + " exists: " + FileUtils.exists(path));
+		if (FileUtils.exists(path)) {
+            final Intent intent = new Intent(this, GnuplotGraphActivity.class);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.putExtra("graph", path);
+            this.startActivity(intent);
 		} else {
 			Toast.makeText(this, getString(R.string.toast_no_graph), Toast.LENGTH_LONG).show();
 		}
@@ -843,7 +845,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			retval = true;
 			break;
 		case R.id.graph:
-			showGraph();
+			showGraph(GNUPLOT_OUT);
 			retval = true;
 			break;
 		case R.id.quit:

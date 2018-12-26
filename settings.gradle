@@ -1,1 +1,3 @@
-include ':app'
+include ':app', ':android-java-utils'
+
+project (':android-java-utils').projectDir = new File('/home/sergey/projects/android/java/android-java-utils/')
