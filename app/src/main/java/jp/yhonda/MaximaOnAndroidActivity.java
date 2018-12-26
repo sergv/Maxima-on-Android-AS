@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.ProcessBuilder;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,12 +72,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	int mcmdArrayIndex = 0;
 	String maximaURL = null;
 
-	private static final String APP_DATA_DIR  = "/data/data/jp.yhonda";
-	private static final String QEPCAD_SCRIPT = APP_DATA_DIR + "/files/additions/qepcad/qepcad.sh";
+	private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
 
-	private static final String APP_DATA_TMP_DIR	= APP_DATA_DIR + "/files/tmp";
-	private static final String GNUPLOT_OUT			= APP_DATA_TMP_DIR + "/maxout.html";
-	private static final String QUEPCAD_INPUT		= APP_DATA_TMP_DIR + "/qepcad_input.txt";
+	private static final String QEPCAD_DIR   = APP_DATA_DIR + "/files/additions/qepcad";
+
+	private static final String APP_DATA_TMP_DIR = APP_DATA_DIR + "/files/tmp";
+	private static final String GNUPLOT_OUT      = APP_DATA_TMP_DIR + "/maxout.html";
+	private static final String QUEPCAD_INPUT    = APP_DATA_TMP_DIR + "/qepcad_input.txt";
 
 	private static final String manjp = "file:///android_asset/maxima-doc/ja/maxima.html";
 	private static final String manen = "file:///android_asset/maxima-doc/en/maxima.html";
@@ -536,17 +538,21 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			String resString = maximaProccess.getProcessResult();
 			maximaProccess.clearStringBuilder();
 			while (isStartQepcadString(resString)) {
+				final String qepcadExe =
+					QEPCAD_DIR + "/bin/qepcad" +
+					(CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86) ? ".x86" : "") ;
 				final List<String> qepcadCmd = new ArrayList<String>();
-				qepcadCmd.add(QEPCAD_SCRIPT);
+				qepcadCmd.add(QEPCAD_DIR + "/qepcad.sh");
+				qepcadCmd.add(qepcadExe);
 				try {
 					new CommandExec(qepcadCmd);
 				} catch (IOException e) {
-					Log.d("MoA", "exception7");
+					Log.d("MoA", "Exception while executing qepcad: " + e);
 				}
 				try {
 					maximaProccess.maximaCmd("qepcad finished\n");
 				} catch (IOException e) {
-					Log.d("MoA", "exception8");
+					Log.d("MoA", "Exception when reporting to maxima that qepcad finished: " + e);
 				}
 				resString = maximaProccess.getProcessResult();
 				maximaProccess.clearStringBuilder();
@@ -555,11 +561,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			Log.d("MoA", "onEditorAction: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
 			if (FileUtils.exists(gnuplotInputFile())) {
 				final List<String> gnuplotCmd = new ArrayList<String>();
-				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
-					gnuplotCmd.add(internalDir + "/additions/gnuplot/bin/gnuplot.x86");
-				} else {
-					gnuplotCmd.add(internalDir + "/additions/gnuplot/bin/gnuplot");
-				}
+				final String gnuplotExe =
+					internalDir + "/additions/gnuplot/bin/gnuplot" +
+					(CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86) ? ".x86" : "") ;
+				gnuplotCmd.add(gnuplotExe);
 				gnuplotCmd.add(gnuplotInputFile());
 				try {
 					Log.d("MoA", "onEditorAction: starting gnuplot command " + gnuplotCmd);

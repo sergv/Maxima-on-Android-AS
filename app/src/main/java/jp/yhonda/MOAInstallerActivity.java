@@ -172,13 +172,6 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 					install(10);
 					me.finish();
 				}
-				// Existence of file x86 is used in qepcad.sh
-				if (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86)) {
-					final File x86File = new File(internalDir.getAbsolutePath() + "/x86");
-					if (!x86File.exists()) {
-						x86File.createNewFile();
-					}
-				}
 				final String maximaFile = CpuArchitecture.getMaximaExecutableName();
 				if (maximaFile == null) {
 					Log.v("MoA","Install of additions failed.");
