@@ -44,9 +44,10 @@ public final class CpuArchitecture {
 
 	public static void initCpuArchitecture() {
 		final String arch = System.getProperty("os.arch");
+		Log.d("MoA", "arch = " + arch);
 		if (arch.equals("x86_64") || arch.equals("x86")) {
 			cpuarch = Arch.x86;
-		} else if (arch.equals("armeabi-v7a") || arch.equals("armeabi") || arch.equals("arm64-v8a"))  {
+		} else if (arch.equals("armeabi-v7a") || arch.equals("armeabi") || arch.equals("arm64-v8a") || arch.equals("armv7l"))  {
 			cpuarch = Arch.arm;
 		}
 	}
