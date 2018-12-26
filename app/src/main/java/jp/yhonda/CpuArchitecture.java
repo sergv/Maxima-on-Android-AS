@@ -22,7 +22,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.os.Build;
 import android.util.Log;
 
 import jp.yhonda.CommandExec;
@@ -47,7 +46,7 @@ public final class CpuArchitecture {
 		Log.d("MoA", "arch = " + arch);
 		if (arch.equals("x86_64") || arch.equals("x86")) {
 			cpuarch = Arch.x86;
-		} else if (arch.equals("armeabi-v7a") || arch.equals("armeabi") || arch.equals("arm64-v8a") || arch.equals("armv7l"))  {
+		} else if (arch.equals("armeabi-v7a") || arch.equals("armeabi") || arch.equals("arm64-v8a") || arch.equals("armv7l") || arch.equals("aarch64"))  {
 			cpuarch = Arch.arm;
 		}
 	}
