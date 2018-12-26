@@ -313,7 +313,7 @@
 
 ($set_plot_option '((mlist) $plot_format $gnuplot))
 ($set_plot_option '((mlist) $gnuplot_term $svg))
-($set_plot_option '((mlist) $gnuplot_preamble "set term svg size 2000,2000; set key font \",16\" spacing 1; set tics font \",16\"; "))
+($set_plot_option '((mlist) $gnuplot_preamble "set term svg size 2000,2000; set key font \",16\" spacing 1; set tics font \",16\"; set grid xtics ytics mxtics mytics; set mxtics 2; set mytics 2; "))
 ($set_plot_option '((mlist) $gnuplot_out_file "/data/data/jp.yhonda/files/tmp/maxout.svg"))
 (setq $draw_graph_terminal '$canvas)
 
