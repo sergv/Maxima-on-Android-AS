@@ -18,12 +18,19 @@
 
 package jp.yhonda;
 
-import android.annotation.SuppressLint;
+import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.helpers.Util;
+import android.helpers.permissions.PermissionProvider;
+import android.helpers.permissions.PermissionRequestsManager;
+import android.helpers.permissions.SinglePermissionProvider;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.caverock.androidsvg.SVG;
@@ -31,11 +38,30 @@ import com.caverock.androidsvg.SVGImageView;
 import com.caverock.androidsvg.SVGParseException;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 public class GnuplotGraphActivity extends AppCompatActivity {
+
+	private static final int SAVE_GRAPH_RESULT_CODE = 0;
+
+	private static double ZOOM_FACTOR = 0.25;
+
 	private ZoomControls zoomControls;
+	private File graphFile;
+
+	private final PermissionRequestsManager mPermissionManager;
+
+	public GnuplotGraphActivity() {
+		this.mPermissionManager = new PermissionRequestsManager(this);
+	}
+
+	@Override
+	public void onRequestPermissionsResult(final int requestCode, final String[] permissions, final int[] grantResults) {
+		mPermissionManager.onPermissionResult(requestCode, permissions, grantResults);
+	}
 
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
@@ -45,19 +71,99 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 
 		final Intent origIntent = getIntent();
 		final String graphFile = origIntent.getStringExtra("graph");
+		this.graphFile = new File(graphFile);
 
 		final SVGImageView graphView = (SVGImageView) findViewById(R.id.gnuplot_graph_view);
 
 		try {
 			final SVG img = SVG.getFromInputStream(new BufferedInputStream(new FileInputStream(graphFile)));
 			graphView.setSVG(img);
-			zoomControls = new ZoomControls(this, graphView, img.getDocumentWidth(), img.getDocumentHeight());
+			zoomControls = new ZoomControls(this, graphView, (int) img.getDocumentWidth(), (int) img.getDocumentHeight());
 		} catch (FileNotFoundException e) {
 			Log.d("MoA", "Graph file was not found: " + e);
 			Toast.makeText(this, "Graph file " + graphFile + " is misssing!", Toast.LENGTH_LONG).show();
 		} catch (SVGParseException e) {
 			Log.d("MoA", "Graph file contains invalid svg: " + e);
 			Toast.makeText(this, "Graph file " + graphFile + " contains invalid svg!", Toast.LENGTH_LONG).show();
+		}
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(final Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.gnuplot_graph_activity_menu, menu);
+		return true;
+	}
+
+	public void onMenuZoomIn(final MenuItem item) {
+		zoomControls.zoom(1 + ZOOM_FACTOR);
+	}
+
+	public void onMenuZoomOut(final MenuItem item) {
+		zoomControls.zoom(1 / (1 + ZOOM_FACTOR));
+	}
+
+	public void onMenuFitToScreen(final MenuItem item) {
+		zoomControls.fitToScreen();
+	}
+
+	public void onMenuResetPositionAndZoom(final MenuItem item) {
+		zoomControls.resetZoomAndPosition();
+	}
+
+	public void onMenuSaveGraphToFile(final MenuItem item) {
+		//final Intent intentShareFile = new Intent(Intent.ACTION_SEND);
+		if (graphFile.exists()) {
+			final Intent intent = new Intent(Intent.ACTION_PICK);
+			intent.setAction("org.openintents.action.PICK_FILE");
+			intent.putExtra(Intent.EXTRA_TITLE,"Save SVG graph to");
+			intent.putExtra("org.openintents.extra.TITLE", "Save SVG graph to");
+			try {
+				startActivityForResult(intent, SAVE_GRAPH_RESULT_CODE);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			Toast.makeText(this, "Graph file does not exist: " + graphFile, Toast.LENGTH_LONG).show();
+		}
+	}
+
+	@Override
+	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+		switch (requestCode) {
+			case SAVE_GRAPH_RESULT_CODE: {
+				if (resultCode == RESULT_OK && data != null && data.getData() != null && data.getData().getPath() != null) {
+					final File dest = new File(data.getData().getPath());
+					final Activity act = this;
+					SinglePermissionProvider.requestPermission(
+							R.string.write_graph_to_external_storage_rationale,
+							mPermissionManager,
+							Manifest.permission.WRITE_EXTERNAL_STORAGE,
+							new SinglePermissionProvider.OnPermissionGranted() {
+								@Override
+								public void onPermissionResult(final String permission, final PermissionProvider.PermissionStatus grantResult) {
+									switch (grantResult) {
+									case Granted:
+										try {
+											if (!dest.exists()) {
+												dest.createNewFile();
+											}
+											FileUtils.copyFile(graphFile, dest);
+											Toast.makeText(act, "Graph " + dest + " saved", Toast.LENGTH_SHORT).show();
+										} catch (IOException e) {
+											Log.d("MoA", "failed to copy " + graphFile + " to " + dest + ": " + e);
+											Toast.makeText(act, "Failed to copy graph to " + dest.getAbsolutePath(), Toast.LENGTH_LONG).show();
+										}
+										break;
+									case Denied:
+										Toast.makeText(act, R.string.write_graph_to_external_storage_failed_due_to_missing_permissions, Toast.LENGTH_LONG).show();
+										break;
+									}
+								}
+							});
+				}
+				break;
+			}
 		}
 	}
 }

@@ -13,8 +13,10 @@ import android.widget.ImageView;
 public class ZoomControls implements View.OnTouchListener {
 	private final ImageView controlledView;
 
+	private final int imageWidth, imageHeight;
+
 	private Matrix imageTransform;
-	private final Matrix fullscreenTransform;
+	private final Matrix initialFullscreenTransform;
 	private Matrix intermediateTransform;
 
 	private Integer finger1 = null;
@@ -39,7 +41,7 @@ public class ZoomControls implements View.OnTouchListener {
 			controlledView.getHeight() / 2);
 	}
 
-	private Matrix scaleTransform(final double sx, final double sy, final double px, final double py) {
+	private static Matrix scaleTransform(final double sx, final double sy, final double px, final double py) {
 		final Matrix m = identityMatrix();
 		m.setScale((float) sx, (float) sy, (float) px, (float) py);
 		return m;
@@ -60,8 +62,22 @@ public class ZoomControls implements View.OnTouchListener {
 		controlledView.setImageMatrix(m);
 	}
 
-	public ZoomControls(final Context ctx, final ImageView controlledView, final double imageWidth, final double imageHeight) {
+	private static Matrix fitToScreenTransform(final boolean unifyScales, final int screenWidth, final int screenHeight, final int imageWidth, final int imageHeight) {
+		final double scaleX = screenWidth  / imageWidth;
+		final double scaleY = screenHeight / imageHeight;
+
+		final double effectiveScaleX = unifyScales ? Math.min(scaleX, scaleY) : scaleX;
+		final double effectiveScaleY = unifyScales ? Math.min(scaleX, scaleY) : scaleY;
+
+		return mm(
+				translationTransform(screenWidth / 2 - imageWidth / 2, screenHeight / 2 - imageHeight / 2),
+				scaleTransform((float) effectiveScaleX, (float) effectiveScaleY, screenWidth / 2, screenHeight / 2));
+	}
+
+	public ZoomControls(final Context ctx, final ImageView controlledView, final int imageWidth, final int imageHeight) {
 		this.controlledView = controlledView;
+		this.imageWidth     = imageWidth;
+		this.imageHeight    = imageHeight;
 
 		final WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
 		final Display display = wm.getDefaultDisplay();
@@ -69,17 +85,12 @@ public class ZoomControls implements View.OnTouchListener {
 		display.getSize(size);
 		final int width  = size.x;
 		final int height = size.y - 128; // subtract 128 as a heuristic to account for title bar that takes screen space
-		final double scaleX = width  / imageWidth;
-		final double scaleY = height / imageHeight;
-		final double scale  = Math.min(scaleX, scaleY);
 
 		controlledView.setScaleType(ImageView.ScaleType.MATRIX);
 
-		fullscreenTransform = mm(
-			translationTransform(width / 2 - imageWidth / 2, height / 2 - imageHeight / 2),
-			scaleTransform((float) scale, (float) scale, width / 2, height / 2));
+		initialFullscreenTransform = fitToScreenTransform(true, width, height, imageWidth, imageHeight);
 
-		imageTransform = fullscreenTransform;
+		imageTransform = initialFullscreenTransform;
 		intermediateTransform = identityMatrix();
 
 		updateImage();
@@ -234,7 +245,7 @@ public class ZoomControls implements View.OnTouchListener {
 
 	private void onDoubleTap() {
 		Log.d("MoA", "onDoubleTap");
-		imageTransform = fullscreenTransform;
+		imageTransform = initialFullscreenTransform;
 		updateImage();
 	}
 
@@ -264,6 +275,27 @@ public class ZoomControls implements View.OnTouchListener {
 		imageTransform = mm(imageTransform, intermediateTransform);
 		intermediateTransform = identityMatrix();
 		updateImage();
+	}
+
+	public void zoom(final double s) {
+		imageTransform = mm(imageTransform, scaleTransform(s, s));
+		updateImage();
+	}
+
+	public void resetZoomAndPosition() {
+		imageTransform = initialFullscreenTransform;
+		updateImage();
+	}
+
+	public void fitToScreen() {
+		final int width = controlledView.getWidth();
+		final int height = controlledView.getHeight();
+		if (width != 0 && height != 0) {
+			imageTransform = fitToScreenTransform(false, width, height, imageWidth, imageHeight);
+			updateImage();
+		} else {
+			resetZoomAndPosition();
+		}
 	}
 
 }

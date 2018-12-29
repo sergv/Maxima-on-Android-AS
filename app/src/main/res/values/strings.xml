@@ -67,4 +67,7 @@
     <string name="error_loading_script_file">Could not load script file!</string>
     <string name="script_file_too_large">File too large! Size must not exceed 10MB.</string>
 
+    <string name="write_graph_to_external_storage_rationale">Write permission to storage is required for exporting grapt to file. Please grant the permission.</string>
+    <string name="write_graph_to_external_storage_failed_due_to_missing_permissions">Graph not saved due to missing storage permissions</string>
+
 </resources>
