@@ -66,6 +66,8 @@ import java.util.regex.Pattern;
 
 import android.helpers.Util;
 
+import junit.framework.Assert;
+
 public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		TextView.OnEditorActionListener, OnTouchListener {
 	boolean initialised = false; /* expSize initialize is done or not */
@@ -90,7 +92,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 	String manURL;
 	boolean manLangChanged = true;
-	boolean allExampleFinished = false;
+	boolean allExamplesFinished = false;
 	final Semaphore sem = new Semaphore(1);
 
 	MultiAutoCompleteTextView editText;
@@ -177,21 +179,20 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		editText.setThreshold(bflag ? 2 : 100);
 		editText.setOnEditorActionListener(this);
 
-		final ArrayAdapter<String> adapter =
-				new ArrayAdapter<String>(this,
-						android.R.layout.simple_dropdown_item_1line, getResources().getStringArray(R.array.MaximaCompletionList));
+		final ArrayAdapter<String> completionAdapter = new ArrayAdapter<>(
+				this,
+				android.R.layout.simple_dropdown_item_1line,
+				getResources().getStringArray(R.array.MaximaCompletionList));
 		editText.setTokenizer(new MaximaTokenizer());
-		editText.setAdapter(adapter);
+		editText.setAdapter(completionAdapter);
 		webview.setOnTouchListener(this);
 
 		final Button enterB = (Button) findViewById(R.id.enterB);
 		enterB.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(final View v) {
-				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN,
-						KeyEvent.KEYCODE_ENTER));
-				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP,
-						KeyEvent.KEYCODE_ENTER));
+				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
+				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
 			}
 		});
 
@@ -331,7 +332,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			!(FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
 			this.finish();
 		}
-		final List<String> maximaCmd = new ArrayList<String>();
+		final List<String> maximaCmd = new ArrayList<>();
 		maximaCmd.add(internalDir + "/" + CpuArchitecture.getMaximaExecutableName());
 		maximaCmd.add("--init-lisp=" + internalDir + "/init.lisp");
 
@@ -341,12 +342,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			Log.d("MoA", "Exception while initialising maxima process: " + e);
 			exitMOA();
 		}
-		maximaProccess.clearStringBuilder();
+		maximaProccess.clearOutputBuffer();
 		sem.release();
 		Log.v("MoA", "sem released.");
 	}
 
-	private void copyExample(String mcmd) {
+	private void copyExample(final String mcmd) {
 		Log.d("MoA", "copyExample()");
 		String[] mcmd2 = mcmd.split("\n\\(%");
 		mcmd2[0] = mcmd2[0].replaceFirst("^\\(%", "");
@@ -398,7 +399,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		editText.requestFocus();
 		mcmdArrayIndex++;
 		if (mcmdArrayIndex == mcmdArray.length) {
-			allExampleFinished = true;
+			allExamplesFinished = true;
 			mcmdArrayIndex = 0;
 		}
 	}
@@ -422,7 +423,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		final String olabel = "$%" + oNumStr;
 		final String cmdstr = ":lisp ($printf nil \"$$$$$$ R0 ~a $$$$$$\" " + olabel + ")";
 		try {
-			maximaProccess.maximaCmd(cmdstr + "\n");
+			maximaProccess.sendMaximaInput(cmdstr + "\n");
 		} catch (IOException e) {
 			Log.d("MoA", "reuseOutput exception1");
 			e.printStackTrace();
@@ -432,8 +433,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			e.printStackTrace();
 			exitMOA();
 		}
-		final String resString = maximaProccess.getProcessResult();
-		maximaProccess.clearStringBuilder();
+		final String resString = maximaProccess.getMaximaOutput();
+		maximaProccess.clearOutputBuffer();
 		final Pattern pa = Pattern.compile(".*\\$\\$\\$\\$\\$\\$ R0 (.+) \\$\\$\\$\\$\\$\\$.*");
 		final Matcher ma = pa.matcher(resString);
 		if (ma.find()) {
@@ -467,6 +468,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		handler.postDelayed(task, 1000);
 	}
 
+	@Override
 	public boolean onEditorAction(final TextView testview, final int id, final KeyEvent keyEvent) {
 		try {
 			Log.v("MoA", "onEditorAction");
@@ -483,7 +485,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			final String newsize = settings.getString("fontSize2", "");
 			if (!newsize.trim().isEmpty()) {
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.ChangeExpSize(" + newsize + ")");}});
-				// webview.loadUrl("javascript:window.ChangeExpSize("+newsize+")");
 			}
 			initialised = true;
 		}
@@ -522,7 +523,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				prepareTmpDir();
 				cmdstr = maxima_syntax_check(cmdstr);
 				Log.d("MoA", "Sending command " + cmdstr);
-				maximaProccess.maximaCmd(cmdstr + "\n");
+				maximaProccess.sendMaximaInput(cmdstr + "\n");
 			} catch (IOException e) {
 				Log.d("MoA", "exception4");
 				e.printStackTrace();
@@ -536,15 +537,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			final String cmdstr2 = cmdstr;
 			runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.UpdateInput('"
 					+ escapeChars(cmdstr2) + "<br>" + "')");}});
-//			webview.loadUrl("javascript:window.UpdateInput('"
-//					+ escapeChars(cmdstr) + "<br>" + "')");
-			String resString = maximaProccess.getProcessResult();
-			maximaProccess.clearStringBuilder();
+			String resString = maximaProccess.getMaximaOutput();
+			maximaProccess.clearOutputBuffer();
 			while (isStartQepcadString(resString)) {
 				final String qepcadExe =
 					QEPCAD_DIR + "/bin/qepcad" +
 					(CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86) ? ".x86" : "") ;
-				final List<String> qepcadCmd = new ArrayList<String>();
+				final List<String> qepcadCmd = new ArrayList<>();
 				qepcadCmd.add(QEPCAD_DIR + "/qepcad.sh");
 				qepcadCmd.add(qepcadExe);
 				try {
@@ -553,12 +552,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 					Log.d("MoA", "Exception while executing qepcad: " + e);
 				}
 				try {
-					maximaProccess.maximaCmd("qepcad finished\n");
+					maximaProccess.sendMaximaInput("qepcad finished\n");
 				} catch (IOException e) {
 					Log.d("MoA", "Exception when reporting to maxima that qepcad finished: " + e);
 				}
-				resString = maximaProccess.getProcessResult();
-				maximaProccess.clearStringBuilder();
+				resString = maximaProccess.getMaximaOutput();
+				maximaProccess.clearOutputBuffer();
 			}
 
 			Log.d("MoA", "onEditorAction: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
@@ -610,7 +609,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		 * the end.
 		 */
 		int i = cmd.length() - 1;
-		assert (i >= 0);
+		Assert.assertTrue(i >= 0);
 		char c = ';';
 		while (i >= 0) {
 			c = cmd.charAt(i);
@@ -622,9 +621,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 
 		if (c == ';' || c == '$') {
-			return (cmd.substring(0, i + 1));
+			return cmd.substring(0, i + 1);
 		} else {
-			return (cmd.substring(0, i + 1) + ';');
+			return cmd.substring(0, i + 1) + ';';
 		}
 	}
 
@@ -643,7 +642,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				}
 				final String htmlStr = substitute(resArray[i], "\n", "<br>");
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.UpdateText('" + htmlStr + "')");}});
-				// webview.loadUrl("javascript:window.UpdateText('" + htmlStr + "')");
 			} else {
 				/* tex commands, as we are inside of $$$$$$...$$$$$$ */
 				String texStr = substCRinMBOX(resArray[i]);
@@ -651,12 +649,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				texStr = substituteMBOXVERB(texStr);
 				final String urlstr = "javascript:window.UpdateMath('" + texStr + "')";
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl(urlstr);}});
-				// webview.loadUrl(urlstr);
 			}
 		}
-		if (allExampleFinished == true) {
+		if (allExamplesFinished) {
 			Toast.makeText(this, "All examples are executed.", Toast.LENGTH_LONG).show();
-			allExampleFinished = false;
+			allExamplesFinished = false;
 		}
 		//Delete temporary script file:
 		if (temporaryScriptFile != null) {
@@ -664,21 +661,22 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 	}
 
-	private String substCRinMBOX(String str) {
-		String resValue = "";
-		String tmpValue = str;
-		int p;
-		while ((p = tmpValue.indexOf("mbox{")) != -1) {
-			resValue = resValue + tmpValue.substring(0, p) + "mbox{";
-			int p2 = tmpValue.indexOf("}", p + 5);
-			assert (p2 > 0);
-			String tmp2Value = tmpValue.substring(p + 5, p2);
-			resValue = resValue
-					+ substitute(tmp2Value, "\n", "}\\\\\\\\ \\\\mbox{");
-			tmpValue = tmpValue.substring(p2, tmpValue.length());
+	private String substCRinMBOX(final String str) {
+		final StringBuilder res = new StringBuilder();
+		String tmp = str;
+		int startPos = -1;
+		while ((startPos = tmp.indexOf("mbox{")) != -1) {
+			res.append(tmp.substring(0, startPos));
+			res.append("mbox{");
+			final int contentStart = startPos + 5;
+			final int contentEnd = tmp.indexOf("}", contentStart);
+			Assert.assertTrue(contentEnd > 0);
+			final String contents = tmp.substring(contentStart, contentEnd);
+			res.append(substitute(contents, "\n", "}\\\\\\\\ \\\\mbox{"));
+			tmp = tmp.substring(contentEnd, tmp.length());
 		}
-		resValue = resValue + tmpValue;
-		return (resValue);
+		res.append(tmp);
+		return new String(res);
 	}
 
 	static private String substituteMBOXVERB(String texStr) {
@@ -691,9 +689,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				m.appendReplacement(sb, "$1");
 			}
 			m.appendTail(sb);
-			return sb.toString()+"}";
+			return sb.toString() + "}";
 		}
-		return(texStr);
+		return texStr;
 	}
 
 	static private String substitute(final String input, final String pattern, final String replacement) {
@@ -773,7 +771,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 	private void exitMOA() {
 		try {
-			maximaProccess.maximaCmd("quit();\n");
+			maximaProccess.sendMaximaInput("quit();\n");
 			finish();
 		} catch (IOException e) {
 			Log.d("MoA", "exception7");
@@ -788,11 +786,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	private boolean maximaBinaryExists() {
 		CpuArchitecture.initCpuArchitecture();
 		final String res = CpuArchitecture.getMaximaExecutableName();
-		if (res == null) {
-			return false;
-		} else {
-			return ((new File(internalDir.getAbsolutePath() + "/" + res)).exists());
-		}
+		return (new File(internalDir.getAbsolutePath() + "/" + res)).exists();
 	}
 
 	@Override

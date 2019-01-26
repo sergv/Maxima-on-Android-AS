@@ -24,18 +24,19 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class CommandExec {
-	private final StringBuilder sb = new StringBuilder(); // output buffer
-	private final ProcessBuilder builder;
+	private final StringBuilder outputBuffer = new StringBuilder(); // output buffer
+	private final ProcessBuilder procBuilder;
 	private final Process proc;
 	private final InputStream is;
 	private final long pid;
 
 	public CommandExec (final List<String> commandList) throws IOException {
-		builder = new ProcessBuilder(commandList);
+		procBuilder = new ProcessBuilder(commandList);
 		// process starts
-		proc = builder.start();
-		pid = processPID(proc);
-		is = proc.getInputStream();
+		proc = procBuilder.start();
+		pid  = processPID(proc);
+		is   = proc.getInputStream();
+		// Wait until first character becomes available
 		while (true) {
 			final int c = is.read();
 			switch (c) {
@@ -45,17 +46,17 @@ public class CommandExec {
 				case 0x04:
 					return;
 				default:
-					sb.append((char) c);
+					outputBuffer.append((char) c);
 					break;
 			}
 		}
 	}
 
-	public void maximaCmd(final String mcmd) throws IOException {
-		if (!mcmd.trim().isEmpty()) {
+	public void sendMaximaInput(final String input) throws IOException {
+		if (!input.trim().isEmpty()) {
 			// obtain process standard output stream
 			final OutputStream os = proc.getOutputStream();
-			os.write(mcmd.getBytes("UTF-8"));
+			os.write(input.getBytes("UTF-8"));
 			os.flush();
 		}
 		while (true) {
@@ -72,26 +73,26 @@ public class CommandExec {
 				return;
 			case 0x5c:
 				// 0x5c needs to be escaped by 0x5c, the backslash.
-				sb.append((char) c);
-				sb.append((char) c);
+				outputBuffer.append((char) c);
+				outputBuffer.append((char) c);
 				break;
 			case 0x27:
 				// 0x27 needs to be escaped as it is ' - single quote.
-				sb.append((char) 0x5c);
-				sb.append((char) c);
+				outputBuffer.append((char) 0x5c);
+				outputBuffer.append((char) c);
 				break;
 			default:
-				sb.append((char) c);
+				outputBuffer.append((char) c);
 			}
 		}
 	}
 
-	public String getProcessResult() {
-		return (new String(sb));
+	public String getMaximaOutput() {
+		return new String(outputBuffer);
 	}
 
-	public void clearStringBuilder() {
-		sb.delete(0, sb.length());
+	public void clearOutputBuffer() {
+		outputBuffer.delete(0, outputBuffer.length());
 	}
 
 	public long getPID() {
