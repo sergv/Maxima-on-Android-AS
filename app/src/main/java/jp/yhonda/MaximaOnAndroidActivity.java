@@ -912,7 +912,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		} else {
 			final Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-			intent.addCategory(intent.CATEGORY_OPENABLE);
+			intent.addCategory(Intent.CATEGORY_OPENABLE);
 			intent.setType("*/*");
 			startActivityForResult(intent, READ_REQUEST_CODE);
 		}
