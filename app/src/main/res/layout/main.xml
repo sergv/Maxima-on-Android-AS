@@ -37,7 +37,7 @@
             android:isScrollContainer="false"
             android:keepScreenOn="true"
             android:maxLines="1"
-            android:selectAllOnFocus="true" />
+            android:selectAllOnFocus="false" />
 
         <Button
             android:id="@+id/enterB"

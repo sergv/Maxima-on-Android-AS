@@ -26,6 +26,7 @@
 
     <string name="hello">Hello World, MaximaOnAndroidActivity!</string>
     <string name="app_name">MaximaOnAndroid</string>
+    <string name="maxima_name">Maxima</string>
     <string name="internal_storage_insufficient">0n the internal storage. Please press Cancel button for now and make sure you have at least 32MB of free space. Then try to run Maxima on Android again!!</string>
     <string name="storage_insufficient_for_maxima_data">Maxima on Android requires additional 85MB of free storage for Maxima data installation. Unfortunately there seems no enough space found on the internal and external storage. Please press Cancel button for now and make sure you have at least 85MB of free space. Then try to run Maxima on Android again!!</string>
     <string name="install_in_progress">Install in progress…</string>
@@ -69,5 +70,7 @@
 
     <string name="write_graph_to_external_storage_rationale">Write permission to storage is required for exporting grapt to file. Please grant the permission.</string>
     <string name="write_graph_to_external_storage_failed_due_to_missing_permissions">Graph not saved due to missing storage permissions</string>
+
+    <string name="input_code_hint">&gt;</string>
 
 </resources>

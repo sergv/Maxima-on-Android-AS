@@ -2,15 +2,41 @@ package jp.yhonda;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 
 public class FileUtils {
 
     public static boolean exists(final String path) {
-		return (new File(path)).exists();
+		return exists(new File(path));
+    }
+
+    public static boolean exists(final File path) {
+        return path.exists();
+    }
+
+    public static String readFile(final File src) throws IOException {
+        final StringBuilder text = new StringBuilder();
+        final BufferedReader br  = new BufferedReader(new FileReader(src));
+
+        try {
+            String line;
+            if ((line = br.readLine()) != null) {
+                text.append(line);
+                while ((line = br.readLine()) != null) {
+                    text.append('\n');
+                    text.append(line);
+                }
+            }
+        } finally {
+            br.close();
+        }
+
+        return text.toString();
     }
 
     public static void deleteRecursive(final File fileOrDirectory) {

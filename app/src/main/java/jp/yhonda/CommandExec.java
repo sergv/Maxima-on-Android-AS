@@ -88,7 +88,9 @@ public class CommandExec {
 	}
 
 	public String getMaximaOutput() {
-		return new String(outputBuffer);
+		final String res = new String(outputBuffer);
+		clearOutputBuffer();
+		return res;
 	}
 
 	public void clearOutputBuffer() {

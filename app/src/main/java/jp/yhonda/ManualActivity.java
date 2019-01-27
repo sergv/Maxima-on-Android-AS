@@ -114,7 +114,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 				 * first processed by the copyExampleCallback() function, then
 				 * displayed as log.
 				 */
-				String msg = cm.message();
+				final String msg = cm.message();
 				if (msg.startsWith("CECB:")) {
 					copyExampleCallback(msg.substring("CECB:".length()));
 				}
@@ -166,7 +166,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 				webview.goBack();
 				return true;
 			} else {
-				Intent intent = new Intent(this, MaximaOnAndroidActivity.class);
+				Intent intent = new Intent(this, MaximaActivity.class);
 				setResult(RESULT_OK, intent);
 				intent.putExtra("sender", "manualActivity");
 				finish();
@@ -188,7 +188,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 		boolean retval = false;
 		switch (item.getItemId()) {
 		case R.id.gomaxima:
-			Intent intent = new Intent(this, MaximaOnAndroidActivity.class);
+			Intent intent = new Intent(this, MaximaActivity.class);
 			setResult(RESULT_OK, intent);
 			intent.putExtra("sender", "ManualActivity");
 			finish();
@@ -267,14 +267,14 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 		Log.v("MoAMan", "onDestroy");
 	}
 
-	public void copyExampleCallback(String maximacmd) {
+	public void copyExampleCallback(final String maximacmd) {
 		Log.v("MoAMan", "copyExampleCallback()");
 		if (!maximacmd.startsWith("(%i")) {
-			String msg = "This is not an execution script example.";
+			final String msg = "This is not an execution script example.";
 			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 			return;
 		}
-		final Intent intent = new Intent(this, MaximaOnAndroidActivity.class);
+		final Intent intent = new Intent(this, MaximaActivity.class);
 		setResult(RESULT_OK, intent);
 		intent.putExtra("maxima command", maximacmd);
 		intent.putExtra("sender", "manualActivity");
@@ -284,14 +284,13 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 		 * will receive the finish() method, which will send the intent and
 		 * terminate the manual activity.
 		 */
-		class ActivityFinisher implements Runnable {
+		final Handler handle = new Handler();
+		final Runnable af = new Runnable() {
 			@Override
 			public void run() {
 				thisActivity.finish();
 			}
-		}
-		Handler handle = new Handler();
-		ActivityFinisher af = new ActivityFinisher();
+		};
 		handle.postDelayed(af, 500);
 		Log.v("MoAMan", "end of copyExampleCallback()");
 

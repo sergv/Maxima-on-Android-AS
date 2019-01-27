@@ -73,7 +73,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	boolean initialised = false; /* expSize initialize is done or not */
 	String[] mcmdArray = null; /* manual example input will be stored. */
 	int mcmdArrayIndex = 0;
-	String maximaURL = null;
+
+	private final String maximaURL = Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN
+			? "file:///android_asset/maxima_svg.html"
+			: "file:///android_asset/maxima_html.html";
 
 	private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
 
@@ -114,13 +117,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		Log.d("MoA", "onCreate()");
 		super.onCreate(savedInstanceState);
 
-		if (Build.VERSION.SDK_INT > 16) { // > JELLY_BEAN
-			maximaURL = "file:///android_asset/maxima_svg.html";
-			// maximaURL="http://192.168.0.20/~yasube/maxima_svg.html";
-		} else {
-			maximaURL = "file:///android_asset/maxima_html.html";
-		}
-
 		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 		final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 		manURL = pref.getString("manURL", manen);
@@ -149,8 +145,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			}
 
 		});
-		final SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(this);
+		final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		float sc = settings.getFloat("maxima main scale", 1.5f);
 		Log.v("MoA", "onCreate sc=" + Float.toString(sc));
 		webview.setInitialScale((int) (100 * sc));
@@ -434,7 +429,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			exitMOA();
 		}
 		final String resString = maximaProccess.getMaximaOutput();
-		maximaProccess.clearOutputBuffer();
 		final Pattern pa = Pattern.compile(".*\\$\\$\\$\\$\\$\\$ R0 (.+) \\$\\$\\$\\$\\$\\$.*");
 		final Matcher ma = pa.matcher(resString);
 		if (ma.find()) {
@@ -538,7 +532,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.UpdateInput('"
 					+ escapeChars(cmdstr2) + "<br>" + "')");}});
 			String resString = maximaProccess.getMaximaOutput();
-			maximaProccess.clearOutputBuffer();
 			while (isStartQepcadString(resString)) {
 				final String qepcadExe =
 					QEPCAD_DIR + "/bin/qepcad" +
@@ -557,7 +550,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 					Log.d("MoA", "Exception when reporting to maxima that qepcad finished: " + e);
 				}
 				resString = maximaProccess.getMaximaOutput();
-				maximaProccess.clearOutputBuffer();
 			}
 
 			Log.d("MoA", "onEditorAction: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
@@ -822,7 +814,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		getMenuInflater().inflate(R.menu.menu, menu);
+		getMenuInflater().inflate(R.menu.maxima_main_menu_ext, menu);
 		return true;
 	}
 
@@ -830,42 +822,42 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		boolean retval = false;
 		switch (item.getItemId()) {
-		case R.id.about:
+		case R.id.maxima_main_menu_ext_about:
 			showHTML("file:///android_asset/About_MoA/index.html", true);
 			retval = true;
 			break;
-		case R.id.preference:
+		case R.id.maxima_main_menu_ext_preference:
 			showPreference();
 			retval = true;
 			break;
-		case R.id.graph:
+		case R.id.maxima_main_menu_ext_graph:
 			showGraph(GNUPLOT_OUT);
 			retval = true;
 			break;
-		case R.id.quit:
+		case R.id.maxima_main_menu_ext_quit:
 			exitMOA();
 			retval = true;
 			break;
-		case R.id.nextexample:
+		case R.id.maxima_main_menu_ext_nextexample:
 			copyExampleInputToInputArea();
 			break;
-		case R.id.man:
+		case R.id.maxima_main_menu_ext_man:
 			showManual();
 			retval = true;
 			break;
-		case R.id.save:
+		case R.id.maxima_main_menu_ext_save:
 			sessionMenu("ssave();");
 			retval = true;
 			break;
-		case R.id.restore:
+		case R.id.maxima_main_menu_ext_restore:
 			sessionMenu("srestore();");
 			retval = true;
 			break;
-		case R.id.playback:
+		case R.id.maxima_main_menu_ext_playback:
 			sessionMenu("playback();");
 			retval = true;
 			break;
-		case R.id.loadscript:
+		case R.id.maxima_main_menu_ext_loadscript:
             selectScriptFile();
 			break;
 
@@ -884,7 +876,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void selectScriptFile() {
-		if (Build.VERSION.SDK_INT < 19) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
 			//Versions earlier than KitKat do not support the Storage Access Framework.
 			//Show file path input box instead:
 			final android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(MaximaOnAndroidActivity.this);

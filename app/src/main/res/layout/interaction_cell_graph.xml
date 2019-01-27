@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:orientation="vertical">
+  <TextView android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/interaction_cell_graph_input"
+            android:gravity="start"
+            android:focusable="false"
+            android:typeface="monospace"
+            />
+  <com.caverock.androidsvg.SVGImageView
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:id="@+id/interaction_cell_graph_output"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      android:gravity="center_horizontal|start"
+      />
+</LinearLayout>

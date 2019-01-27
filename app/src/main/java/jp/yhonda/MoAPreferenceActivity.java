@@ -52,6 +52,7 @@ public final class MoAPreferenceActivity extends PreferenceActivity implements O
         PreferenceManager.getDefaultSharedPreferences(this).unregisterOnSharedPreferenceChangeListener(this);
     }
 
+    @Override
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
         updatePreferenceSummary(key);
         AppGlobals.getSingleton().set(key, "true");
