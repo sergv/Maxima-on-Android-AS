@@ -1,0 +1,246 @@
+<!doctype html>
+<!-- Created: 30 January 2019 -->
+<html>
+  <head lang="en-US" dir="ltr">
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title></title>
+    <meta name="author" content="" />
+    <meta name="description" content="" />
+    <meta name="keywords" content="" />
+
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        showMathMenu: false,
+        extensions: ["tex2jax.js", "mhchem.js"],
+        jax: ["input/TeX", "output/SVG"],
+        showProcessingMessages: false,
+        messageStyle: "none",
+        TeX: {
+          extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js", "noUndefined.js"]
+        }
+        tex2jax: {
+          displayMath: [['$$$$$$', '$$$$$$'], ["\\[", "\\]"]],
+          processEscapes: true
+        },
+        "SVG": {
+          availableFonts: ["Neo-Euler"],
+          //availableFonts: ["STIX-Web"],
+          linebreaks: { automatic: true }
+        }
+
+      });
+    </script>
+    <script type="text/javascript" src="MathJax-2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+
+    <script type="text/javascript">
+      (function() {
+
+        window.onFormulaRendered = function(node) {
+          window.MOA.onFormulaRendered(node.outerHTML);
+        }
+
+        window.appendNode = function(node) {
+          document.getElementById("output").appendChild(node);
+        }
+
+        window.appendNodeWithSize = function(node) {
+          console.log("appendNodeWithSize.js: started");
+          var divnode = document.createElement("div");
+          divnode.style.fontSize = "16px";
+          divnode.appendChild(node);
+          var out = document.getElementById("output");
+          out.appendChild(divnode);
+          console.log("appendNodeWithSize.js: done");
+          return out;
+        }
+
+        window.RenderTex = function(tex) {
+          console.log("RenderTex.js: " + tex);
+          var match   = tex.match(/ *$$$$$ *(.*) *$$$$$ */);
+          var text    = " $$$$$$ " + escDollars(match[1]) + " $$$$$$ ";
+
+
+          var scriptElem  = document.createElement("script");
+          scriptElem.id = "moa1";
+          scriptElem.type = "math/tex";
+          scriptElem.appendChild(document.createTextNode(text));
+
+          var mathlist = window.appendNodeWithSize(scriptElem);
+            //document.getElementById("output");
+
+          console.log("RenderTex.js: asking MathJax to do the rendering");
+          // MathJax.Hub.queue.Push(["appendNodeWithSize", window, scriptElem]);
+          MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, mathlist]);
+          console.log("RenderTex.js: typeset request sent");
+          MathJax.Hub.queue.Push(["onFormulaRendered", window, scriptElem]);
+          console.log("RenderTex.js: done");
+        }
+
+
+        /*
+           Internal function
+         */
+        function escDollars(text) {
+          var i = text.indexOf('$');
+          if (i == -1) {
+            // $は見つからなかった
+            return text;
+          } else if (i == 0) {
+            // 先頭が$だった
+            return '\\' + '$' + escDollars(text.substring(1));
+          } else {
+            // $は２文字目以降だった
+            // $の直前が\出ない場合、$の直前までの文字列と'\\'+'$'とescDoller(残り)
+            // $の直前が\の場合、$の直前までの文字列と'$'とescDoller(残り)
+            var a = text.substring(0, i);
+            var b = '';
+            if (text.substring(i - 1, i) == '\\') {
+              b = '$';
+            } else {
+              b = '\\' + '$';
+            }
+            var c = escDollars(text.substring(i + 1));
+            return a + b + c;
+          }
+        }
+
+
+
+        //    window.scrollToEnd = function() {
+        //      window.MOA.scrollToEnd();
+        //    }
+        //
+        //    ReuseByTouch = function(text) {
+        //      var dectext = unescape(text);
+        //      console.log(dectext);
+        //      window.MOA.reuseByTouch(dectext);
+        //    }
+        //
+        //    /*
+        //       Java-JS Interface function
+        //     */
+        //    window.UpdateInput = function(text) {
+        //      console.log("UpdateInput " + text);
+        //      var textArray = window.splitText(text);
+        //      console.log("UpdateInput " + textArray.length);
+        //      var first = true;
+        //      var tnode = null;
+        //      var makeOnclickRBT = function(etext) {
+        //        // etext should be an escaped text
+        //        return function(ev) {
+        //          console.log(etext);
+        //          ReuseByTouch(etext);
+        //        }
+        //      }
+        //      for (var i = 0; i < textArray.length; i++) {
+        //        if (!(textArray[i] == "")) {
+        //          if (first) {
+        //            first = false;
+        //            tnode = document.createElement('span');
+        //            tnode.appendChild(document.createTextNode(textArray[i]));
+        //            tnode.onclick = makeOnclickRBT(escape(textArray[i]));
+        //            tnode.id      = textArray[i];
+        //          } else {
+        //            tnode = document.createTextNode(textArray[i]);
+        //          }
+        //          MathJax.Hub.queue.Push(["appendNode", window, tnode]);
+        //        }
+        //        if (i < textArray.length - 1) {
+        //          tnode = document.createElement("br");
+        //          MathJax.Hub.queue.Push(["appendNode", window, tnode]);
+        //        }
+        //      }
+        //      MathJax.Hub.queue.Push(["scrollToEnd", window]);
+        //    }
+        //
+        //    window.splitText = function(text) {
+        //      console.log("splitText " + text);
+        //      var newtext = text.replace(/<br>/g, "\n");
+        //      var a       = newtext.split("\n");
+        //      for (var i = 0; i < a.length; i++) {
+        //        console.log(a[i]);
+        //      }
+        //      return a;
+        //    }
+        //
+        //    /*
+        //       Java-JS Interface function
+        //     */
+        //    window.UpdateText = function(text) {
+        //      console.log("UpdateText " + text);
+        //      var textArray = window.splitText(text);
+        //      for (var i = 0; i < textArray.length; i++) {
+        //        var re = /^\(%i[0-9]*\) /;
+        //        var res;
+        //        var tnode;
+        //        if (res = textArray[i].match(re)) {
+        //          /* A string starting with input prompt. */
+        //          console.log('batch input ' + res[0]);
+        //          tnode = document.createTextNode(res[0]);
+        //          MathJax.Hub.queue.Push(["appendNode", window, tnode ]);
+        //          /* Input prompt was added as ordinary text. */
+        //          /* The rest is added as reusable maxima command */
+        //          window.UpdateInput(textArray[i].substring(res[0].length));
+        //        } else if (!(textArray[i] == "")) {
+        //          tnode = document.createTextNode(textArray[i]);
+        //          MathJax.Hub.queue.Push(["appendNode", window, tnode ]);
+        //        }
+        //        if (i < textArray.length - 1) {
+        //          tnode = document.createElement("br");
+        //          MathJax.Hub.queue.Push(["appendNode", window, tnode ]);
+        //        }
+        //      }
+        //      MathJax.Hub.queue.Push(["scrollToEnd", window ]);
+        //    }
+        //
+        //    /*
+        //       Java-JS Interface function
+        //     */
+        //
+        //    window.UpdateMath = function(pack) {
+        //      console.log("UpdateMath " + pack);
+        //      var RR      = pack.match(/ *RO([1-2])/);
+        //      var text    = " $$$$$$ ";
+        //      var oNumStr = "";
+        //      if (RR[1] == "1") {
+        //        RR      = pack.match(/ *RO1 \$%([a-zA-Z][0-9]+)(.*)/);
+        //        text    = text + escDollars(RR[2]) + " $$$$$$ ";
+        //        oNumStr = RR[1].toLowerCase();
+        //      } else if (RR[1] == "2") {
+        //        RR      = pack.match(/ *RO2 (.*)/);
+        //        text    = text + escDollars(RR[1]) + " $$$$$$ ";
+        //        oNumStr = "nolabel";
+        //      } else {
+        //        console.log("Fatal error in UpdateMath.");
+        //        console.log(pack);
+        //        return;
+        //      }
+        //      var mathlist = document.getElementById("MathList");
+        //
+        //      // < script type="math/tex">x+\sqrt{1-x^2}</ script>
+        //
+        //
+        //      var divElem  = document.createElement("div");
+        //      divElem.id = "moa1";
+        //      divElem.appendChild(document.createTextNode(text));
+        //      divElem.onclick = function() {
+        //        console.log("reuseOutput" + oNumStr);
+        //        window.MOA.reuseOutput(oNumStr);
+        //      }
+        //      MathJax.Hub.queue.Push(["appendNodeWithSize", window, divElem]);
+        //      MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, mathlist]);
+        //      MathJax.Hub.queue.Push(["scrollToEnd", window]);
+        //    }
+      })();
+    </script>
+
+  </head>
+  <body style="height: auto; font-size: 18pt">
+          // < script type="math/tex">x+\sqrt{1-x^2}</ script>
+
+
+    <div id="output" style="display: none"></div>
+  </body>
+</html>

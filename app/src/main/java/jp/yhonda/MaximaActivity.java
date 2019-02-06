@@ -10,6 +10,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.helpers.CallbackWithFailure;
 import android.helpers.Util;
 import android.net.Uri;
 import android.os.Build;
@@ -20,6 +21,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -49,15 +51,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.CountDownLatch;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MaximaActivity extends AppCompatActivity {
+
+    public static final String TAG = "MoA";
 
     private static final String manURL = "file:///android_asset/maxima-doc/en/maxima.html";
 
     private static final MaximaVersion mvers = new MaximaVersion(5, 41, 0);
-    public static final String TAG = "MoA";
 
     private File internalDir;
     private File externalDir;
@@ -72,12 +73,13 @@ public class MaximaActivity extends AppCompatActivity {
             : "file:///android_asset/maxima_html.html";
 
     private MultiAutoCompleteTextView inputArea;
-	// private WebView webview;
 
     private InteractionAdapter interactionHistoryAdapter;
     private ListView interactionHistoryView;
     private CountDownLatch binderInitialised = new CountDownLatch(1);
     private MaximaService.MaximaBinder serviceBinder;
+
+    private TexRenderer texRenderer;
 
     private String[] mcmdArray;
     private int mcmdArrayIndex;
@@ -105,51 +107,87 @@ public class MaximaActivity extends AppCompatActivity {
             return i;
         }
 
+        private View setUpTextView(final View view, final ViewGroup viewGroup, final InteractionCell cell) {
+            TextView inputView = null, outputView = null;
+            final View cellView =
+                    view != null &&
+                            ((inputView = (TextView) view.findViewById(R.id.interaction_cell_text_input)) != null) &&
+                            ((outputView = (TextView) view.findViewById(R.id.interaction_cell_text_output)) != null)
+                            ? view
+                            : LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.interaction_cell_text, viewGroup, false);
+
+            if (inputView == null) {
+                inputView = (TextView) cellView.findViewById(R.id.interaction_cell_text_input);
+            }
+            if (outputView == null) {
+                outputView = (TextView) cellView.findViewById(R.id.interaction_cell_text_output);
+            }
+
+            inputView.setText(cell.isNotice ? cell.input : "> " + cell.input);
+            outputView.setText(cell.output);
+
+            return cellView;
+        }
+
+        private Pair<View, SVGImageView> setUpImageView(final View view, final ViewGroup viewGroup, final InteractionCell cell) {
+            TextView inputView = null;
+            SVGImageView outputView = null;
+            final View cellView =
+                    view != null &&
+                            ((inputView  = (TextView)     view.findViewById(R.id.interaction_cell_image_input)) != null) &&
+                            ((outputView = (SVGImageView) view.findViewById(R.id.interaction_cell_image_output)) != null)
+                            ? view
+                            : LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.interaction_cell_image, viewGroup, false);
+
+            if (inputView == null) {
+                inputView = (TextView) cellView.findViewById(R.id.interaction_cell_image_input);
+            }
+            if (outputView == null) {
+                outputView = (SVGImageView) cellView.findViewById(R.id.interaction_cell_image_output);
+            }
+
+            inputView.setText("> " + cell.input);
+            return new Pair<>(cellView, outputView);
+
+        }
+
         @Override
         public View getView(final int i, final View view, final ViewGroup viewGroup) {
             final InteractionCell cell = cells.getCell(i);
             View res = null;
             switch (cell.outputType) {
                 case OutputText: {
-                    TextView inputView = null;
-                    TextView outputView = null;
-                    final View cellView =
-                            view != null &&
-                            ((inputView = (TextView) view.findViewById(R.id.interaction_cell_text_input)) != null) &&
-                            ((outputView = (TextView) view.findViewById(R.id.interaction_cell_text_output)) != null)
-                            ? view
-                            : LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.interaction_cell_text, viewGroup, false);
 
-                    if (inputView == null) {
-                        inputView = (TextView) cellView.findViewById(R.id.interaction_cell_text_input);
-                    }
-                    if (outputView == null) {
-                        outputView = (TextView) cellView.findViewById(R.id.interaction_cell_text_output);
-                    }
+                    if (cell.isNotice) {
+                        res = setUpTextView(view, viewGroup, cell);
+                    } else {
+                        final Pair<View, SVGImageView> tmp = setUpImageView(view, viewGroup, cell);
+                        res = tmp.first;
+                        final SVGImageView out = tmp.second;
 
-                    inputView.setText(cell.isNotice ? cell.input : "> " + cell.input);
-                    outputView.setText(cell.output);
-                    res = cellView;
+                        texRenderer.renderTex(cell.output, new CallbackWithFailure<String, String>() {
+                            @Override
+                            public void onFailure(final String reason) {
+                                Toast.makeText(MaximaActivity.this, "Failed to render tex: " + reason, Toast.LENGTH_LONG).show();
+                                Log.d(TAG, "Failed to render tex: " + reason);
+                            }
+
+                            @Override
+                            public void acceptResult(final String result) {
+                                try {
+                                    out.setSVG(SVG.getFromString(result));
+                                } catch (SVGParseException e) {
+                                    Toast.makeText(MaximaActivity.this, "Invalid svg graph", Toast.LENGTH_LONG).show();
+                                    Log.d(TAG, "Invalid svg graph:\n" + e.toString());
+                                }
+                            }
+                        });
+                    }
                 }
                     break;
                 case OutputSvg: {
-                    TextView inputView = null;
-                    SVGImageView outputView = null;
-                    final View cellView =
-                            view != null &&
-                                    ((inputView  = (TextView)     view.findViewById(R.id.interaction_cell_graph_input)) != null) &&
-                                    ((outputView = (SVGImageView) view.findViewById(R.id.interaction_cell_graph_output)) != null)
-                                    ? view
-                                    : LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.interaction_cell_graph, viewGroup, false);
-
-                    if (inputView == null) {
-                        inputView = (TextView) cellView.findViewById(R.id.interaction_cell_graph_input);
-                    }
-                    if (outputView == null) {
-                        outputView = (SVGImageView) cellView.findViewById(R.id.interaction_cell_graph_output);
-                    }
-
-                    inputView.setText("> " + cell.input);
+                    final Pair<View, SVGImageView> tmp = setUpImageView(view, viewGroup, cell);
+                    final SVGImageView outputView = tmp.second;
                     try {
                         outputView.setSVG(SVG.getFromString(cell.output));
                         outputView.setOnLongClickListener(new View.OnLongClickListener() {
@@ -162,7 +200,7 @@ public class MaximaActivity extends AppCompatActivity {
                     } catch (SVGParseException e) {
                         Log.d(TAG, "Invalid svg graph:\n" + e.toString());
                     }
-                    res = cellView;
+                    res = tmp.first;
                 }
                     break;
             }
@@ -190,6 +228,8 @@ public class MaximaActivity extends AppCompatActivity {
         externalDir = getExternalFilesDir(null);
 
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+
+        texRenderer = new TexRenderer(this, settings);
 
         inputArea = (MultiAutoCompleteTextView) findViewById(R.id.maxima_input);
         inputArea.setTextSize((float) Integer.parseInt(settings.getString("fontSize1", "20")));
@@ -241,37 +281,6 @@ public class MaximaActivity extends AppCompatActivity {
                 return true;
             }
         });
-
-        /*
-        webview = new WebView(this);
-        webview.getSettings().setJavaScriptEnabled(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
-        }
-        float sc = settings.getFloat("maxima main scale", 1.5f);
-        webview.setInitialScale((int) (100 * sc));
-		webview.getSettings().setBuiltInZoomControls(true);
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-            webview.getSettings().setDisplayZoomControls(false);
-        }
-        */
-
-
-        /*
-        final StringBuilder buf = new StringBuilder();
-        final InputStream json = getAssets().open("book/contents.json");
-        final BufferedReader in =
-                new BufferedReader(new InputStreamReader(json, "UTF-8"));
-        String str;
-
-        while ((str = in.readLine()) != null) {
-            buf.append(str);
-        }
-
-        in.close();
-
-        webview.loadData(encodedHtml, "text/html", null);
-        */
 
         if (maximaRequiresInstall()) {
             final Intent intent = new Intent(this, MOAInstallerActivity.class);
@@ -410,6 +419,7 @@ public class MaximaActivity extends AppCompatActivity {
     }
 
     private void startMaximaProcess() {
+        Log.d(TAG, "MaximaActivity.startMaximaProcess: started");
         if (!(FileUtils.exists(internalDir + "/maxima-" + mvers.versionString())) &&
                 !(FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
             Toast.makeText(this, "Maxima executable does not exist, terminating", Toast.LENGTH_LONG).show();
@@ -422,12 +432,11 @@ public class MaximaActivity extends AppCompatActivity {
         final ServiceConnection conn = new ServiceConnection() {
 
             @Override
-            public void onServiceConnected(ComponentName componentName, IBinder binder) {
+            public void onServiceConnected(final ComponentName componentName, final IBinder binder) {
+                Log.d(TAG, "MaximaActivity.startMaximaProcess.onServiceConnected: started");
                 serviceBinder = (MaximaService.MaximaBinder) binder;
 
                 interactionHistoryAdapter = new InteractionAdapter(serviceBinder.getInteractionHistory());
-                //interactionHistoryAdapter.addCell(
-                //    new InteractionCell(initialHeadline, firstMessage, InteractionCell.OutputType.OutputText));
                 interactionHistoryView.setAdapter(interactionHistoryAdapter);
 
                 binderInitialised.countDown();
@@ -441,6 +450,7 @@ public class MaximaActivity extends AppCompatActivity {
             }
         };
         bindService(intent, conn, BIND_AUTO_CREATE);
+        Log.d(TAG, "MaximaActivity.startMaximaProcess: done");
     }
 
     @Override
@@ -546,39 +556,6 @@ public class MaximaActivity extends AppCompatActivity {
             }
         }
         */
-    }
-
-    private String substCRinMBOX(final String str) {
-        final StringBuilder res = new StringBuilder();
-        String tmp = str;
-        int startPos = -1;
-        while ((startPos = tmp.indexOf("mbox{")) != -1) {
-            res.append(tmp.substring(0, startPos));
-            res.append("mbox{");
-            final int contentStart = startPos + 5;
-            final int contentEnd = tmp.indexOf("}", contentStart);
-            Assert.assertTrue(contentEnd > 0);
-            final String contents = tmp.substring(contentStart, contentEnd);
-            res.append(contents.replace("\n", "}\\\\\\\\ \\\\mbox{"));
-            tmp = tmp.substring(contentEnd, tmp.length());
-        }
-        res.append(tmp);
-        return new String(res);
-    }
-
-    static private String substituteMBOXVERB(String texStr) {
-        final Pattern pat = Pattern.compile("\\\\\\\\mbox\\{\\\\\\\\verb\\|(.)\\|\\}");
-        final Matcher m = pat.matcher(texStr);
-        final StringBuffer sb = new StringBuffer();
-        if (m.find()) {
-            m.appendReplacement(sb,"\\\\\\\\text{$1");
-            while (m.find()) {
-                m.appendReplacement(sb, "$1");
-            }
-            m.appendTail(sb);
-            return sb.toString() + "}";
-        }
-        return texStr;
     }
 
     private void showHTML(final String url, final boolean hwaccel) {

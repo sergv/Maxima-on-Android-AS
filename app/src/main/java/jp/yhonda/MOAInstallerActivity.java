@@ -231,15 +231,15 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 		}
 	}
 
-	private void copyFileFromAssetsToLocal(final String src, final String dest, final String line)
+	private void copyFileFromAssetsToLocal(final String src, final String dest, final String firstLine)
 			throws Exception {
-		InputStream fileInputStream = getApplicationContext().getAssets().open(
+		final InputStream fileInputStream = getApplicationContext().getAssets().open(
 				src);
-		BufferedOutputStream buf = new BufferedOutputStream(
+		final BufferedOutputStream buf = new BufferedOutputStream(
 				new FileOutputStream(dest));
 		int read;
-		final byte[] buffer = new byte[4096 * 128];
-		buf.write(line.getBytes());
+		final byte[] buffer = new byte[1024];
+		buf.write(firstLine.getBytes());
 		while ((read = fileInputStream.read(buffer)) > 0) {
 			buf.write(buffer, 0, read);
 		}

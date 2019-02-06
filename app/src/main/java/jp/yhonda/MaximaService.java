@@ -123,6 +123,7 @@ public class MaximaService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
+        Log.d(TAG, "MaximaService.onStartCommand: started");
         super.onStartCommand(intent, flags, startId);
 
         if (maximaProccess == null) {
@@ -170,7 +171,7 @@ public class MaximaService extends Service {
     }
 
     private void startMaximaProcess() {
-        Log.d(TAG, "startMaximaProcess");
+        Log.d(TAG, "MaximaService.startMaximaProcess: started");
 
         CpuArchitecture.initCpuArchitecture();
 
@@ -179,6 +180,11 @@ public class MaximaService extends Service {
         maximaCmd.add("--init-lisp=" + internalDir + "/init.lisp");
 
         try {
+            String cmdStr = "";
+            for (String part : maximaCmd) {
+                cmdStr = cmdStr + " " + part;
+            }
+            Log.d(TAG, "MaximaService.startMaximaProcess: executing command" + cmdStr);
             maximaProccess = new CommandExec(maximaCmd);
         } catch (IOException e) {
             Log.d(TAG, "Exception while initialising maxima process: " + e);
@@ -186,6 +192,7 @@ public class MaximaService extends Service {
         }
         maximaProccess.clearOutputBuffer();
         maximaStartedEvent.countDown();
+        Log.d(TAG, "MaximaService.startMaximaProcess: done");
     }
 
     private void exitMOA() {

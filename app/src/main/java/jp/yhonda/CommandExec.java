@@ -17,6 +17,8 @@
  */
 package jp.yhonda;
 
+import android.util.Log;
+
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -24,6 +26,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 public class CommandExec {
+
+	public static final String TAG = "MoA";
+
 	private final StringBuilder outputBuffer = new StringBuilder(); // output buffer
 	private final ProcessBuilder procBuilder;
 	private final Process proc;
@@ -36,6 +41,24 @@ public class CommandExec {
 		proc = procBuilder.start();
 		pid  = processPID(proc);
 		is   = proc.getInputStream();
+		// InputStream es = proc.getErrorStream();
+		// boolean done = false;
+		// while (!done) {
+		// 	final int c = es.read();
+		// 	switch (c) {
+		// 		case -1:
+		// 			es.close();
+		// 			done = true;
+		// 			break;
+		// 		case 0x04:
+		// 			done = true;
+		// 			break;
+		// 		default:
+		// 			outputBuffer.append((char) c);
+		// 			Log.d(TAG, "buf = " + outputBuffer);
+		// 			break;
+		// 	}
+		// }
 		// Wait until first character becomes available
 		while (true) {
 			final int c = is.read();
@@ -47,6 +70,7 @@ public class CommandExec {
 					return;
 				default:
 					outputBuffer.append((char) c);
+					// Log.d(TAG, "buf = " + outputBuffer);
 					break;
 			}
 		}
