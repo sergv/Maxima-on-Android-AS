@@ -32,6 +32,9 @@
         android:scrollHorizontally="false"
         android:typeface="monospace"
         android:layout_weight="1"
+        android:keepScreenOn="true"
+        android:isScrollContainer="true"
+        android:maxLines="10"
         />
 
     <Button

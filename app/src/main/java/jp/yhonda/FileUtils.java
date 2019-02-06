@@ -3,10 +3,12 @@ package jp.yhonda;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class FileUtils {
@@ -37,6 +39,15 @@ public class FileUtils {
         }
 
         return text.toString();
+    }
+
+    public static void writeFile(final File dest, final String contents) throws IOException {
+        final BufferedWriter bw = new BufferedWriter(new FileWriter(dest));
+        try {
+            bw.write(contents);
+        } finally {
+            bw.close();
+        }
     }
 
     public static void deleteRecursive(final File fileOrDirectory) {

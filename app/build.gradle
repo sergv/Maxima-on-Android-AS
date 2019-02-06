@@ -10,7 +10,7 @@ android {
         applicationId "jp.yhonda"
         minSdkVersion 15
         targetSdkVersion 25
-        testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+        //testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
     }
 
     dependencies {
@@ -59,6 +59,7 @@ android {
 
 dependencies {
 
+    /*
     androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
@@ -82,4 +83,5 @@ dependencies {
     androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
+    */
 }

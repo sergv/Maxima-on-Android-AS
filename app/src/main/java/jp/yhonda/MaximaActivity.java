@@ -2,21 +2,29 @@ package jp.yhonda;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.helpers.Util;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.Pair;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,86 +47,57 @@ import junit.framework.Assert;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MaximaActivity extends Activity {
-
-    private static final String APP_DATA_DIR = "/data/data/jp.yhonda";
-
-    private static final String QEPCAD_DIR   = APP_DATA_DIR + "/files/additions/qepcad";
-
-    private static final String APP_DATA_TMP_DIR = APP_DATA_DIR + "/files/tmp";
-    private static final String GNUPLOT_OUT      = APP_DATA_TMP_DIR + "/maxout.svg";
-    private static final String QUEPCAD_INPUT    = APP_DATA_TMP_DIR + "/qepcad_input.txt";
+public class MaximaActivity extends AppCompatActivity {
 
     private static final String manURL = "file:///android_asset/maxima-doc/en/maxima.html";
 
-    private CommandExec maximaProccess;
+    private static final MaximaVersion mvers = new MaximaVersion(5, 41, 0);
+    public static final String TAG = "MoA";
+
     private File internalDir;
     private File externalDir;
-    private static final MaximaVersion mvers = new MaximaVersion(5, 41, 0);
 
     private static final int READ_REQUEST_CODE = 42;
     // File to be deleted on exit.
     private File temporaryScriptFile = null;
-    private final double scriptFileMaxSize = 1E7;
+    private final double scriptFileMaxSize = 100 * 1024 * 1024;
 
     private final String maximaURL = Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN
             ? "file:///android_asset/maxima_svg.html"
             : "file:///android_asset/maxima_html.html";
 
-    private static final String initialHeadline = "Maxima 5.41.0, ECL 16.1.3, MathJax 2.7.5, Gnuplot 5.2.4";
-    private static final String firstMessage =
-            // "Maxima on Android 3.2.1 September 7, 2018\n" +
-            // "\n" +
-            "\n" +
-            "You can touch previous commands for reuse, like input history.\n" +
-            "Long touch alows to reuse either input or output.\n" +
-            // "You can touch manual examples to execute them in Maxima.\n" +
-            "\n" +
-            "Dedicated to the memory of William Schelter.";
-
     private MultiAutoCompleteTextView inputArea;
+	// private WebView webview;
 
-    private final Semaphore sem = new Semaphore(1);
-
-    private InteractionAdapter interactionHistory;
+    private InteractionAdapter interactionHistoryAdapter;
     private ListView interactionHistoryView;
+    private CountDownLatch binderInitialised = new CountDownLatch(1);
+    private MaximaService.MaximaBinder serviceBinder;
 
-    public enum OutputType {
-        OutputText, OutputSvg
-    }
-
-    public class InteractionCell {
-        public final String input;
-        public final String output;
-        public final OutputType outputType;
-
-        public InteractionCell(final String input, final String output, final OutputType outputType) {
-            this.input      = input;
-            this.output     = output;
-            this.outputType = outputType;
-        }
-    }
+    private String[] mcmdArray;
+    private int mcmdArrayIndex;
 
     private class InteractionAdapter extends BaseAdapter {
 
-        private final List<InteractionCell> cells = new ArrayList<>();
+        private final MaximaService.InteractionHistory cells;
+
+        public InteractionAdapter(final MaximaService.InteractionHistory cells) {
+            this.cells = cells;
+        }
 
         @Override
         public int getCount() {
-            return cells.size();
+            return cells.getCount();
         }
 
         @Override
         public InteractionCell getItem(int i) {
-            return cells.get(i);
+            return cells.getCell(i);
         }
 
         @Override
@@ -128,11 +107,12 @@ public class MaximaActivity extends Activity {
 
         @Override
         public View getView(final int i, final View view, final ViewGroup viewGroup) {
-            final InteractionCell cell = cells.get(i);
+            final InteractionCell cell = cells.getCell(i);
             View res = null;
             switch (cell.outputType) {
                 case OutputText: {
-                    TextView inputView = null, outputView = null;
+                    TextView inputView = null;
+                    TextView outputView = null;
                     final View cellView =
                             view != null &&
                             ((inputView = (TextView) view.findViewById(R.id.interaction_cell_text_input)) != null) &&
@@ -147,7 +127,7 @@ public class MaximaActivity extends Activity {
                         outputView = (TextView) cellView.findViewById(R.id.interaction_cell_text_output);
                     }
 
-                    inputView.setText("> " + cell.input);
+                    inputView.setText(cell.isNotice ? cell.input : "> " + cell.input);
                     outputView.setText(cell.output);
                     res = cellView;
                 }
@@ -169,11 +149,18 @@ public class MaximaActivity extends Activity {
                         outputView = (SVGImageView) cellView.findViewById(R.id.interaction_cell_graph_output);
                     }
 
-                    inputView.setText(cell.input);
+                    inputView.setText("> " + cell.input);
                     try {
                         outputView.setSVG(SVG.getFromString(cell.output));
+                        outputView.setOnLongClickListener(new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View view) {
+                                showInlineGraph(cell.output);
+                                return true;
+                            }
+                        });
                     } catch (SVGParseException e) {
-                        Log.d("MoA", "Invalid svg graph:\n" + e.toString());
+                        Log.d(TAG, "Invalid svg graph:\n" + e.toString());
                     }
                     res = cellView;
                 }
@@ -182,13 +169,8 @@ public class MaximaActivity extends Activity {
             return res;
         }
 
-        public void addCell(final InteractionCell cell) {
-            cells.add(cell);
-            notifyDataSetChanged();
-        }
-
         public void removeCell(final int i) {
-            cells.remove(i);
+            cells.removeCell(i);
             notifyDataSetChanged();
         }
 
@@ -204,8 +186,8 @@ public class MaximaActivity extends Activity {
         setContentView(R.layout.maxima_repl);
         Util.dimUIWith(findViewById(R.id.maxima_repl_toplevel));
 
-        internalDir = this.getFilesDir();
-        externalDir = this.getExternalFilesDir(null);
+        internalDir = getFilesDir();
+        externalDir = getExternalFilesDir(null);
 
         final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -215,16 +197,14 @@ public class MaximaActivity extends Activity {
         inputArea.setThreshold(bflag ? 2 : 100);
 
         inputArea.setTokenizer(new MaximaTokenizer());
-        inputArea.setAdapter(new ArrayAdapter<String>(
+        inputArea.setAdapter(new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_dropdown_item_1line,
                 getResources().getStringArray(R.array.MaximaCompletionList)));
 
-        interactionHistory = new InteractionAdapter();
-        interactionHistory.addCell(
-            new InteractionCell(initialHeadline, firstMessage, OutputType.OutputText));
+        final Activity activity = this;
+
         interactionHistoryView = (ListView) findViewById(R.id.interaction_history);
-        interactionHistoryView.setAdapter(interactionHistory);
         interactionHistoryView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @SuppressWarnings({"unchecked"})
             @Override
@@ -233,47 +213,15 @@ public class MaximaActivity extends Activity {
                                     int position,
                                     long l) {
                 final InteractionCell cell = ((AdapterView<InteractionAdapter>) adapterView).getAdapter().getItem(position);
-                inputArea.setText(cell.input);
+                if (cell.isNotice) {
+                    Toast.makeText(activity, "Not reusing notice", Toast.LENGTH_LONG).show();
+                } else {
+                    inputArea.setText(cell.input);
+                }
             }
         });
 
-        final Activity activity = this;
-        final AdapterView.OnItemLongClickListener removeCell = new AdapterView.OnItemLongClickListener() {
-            @SuppressWarnings({"unchecked"})
-            @Override
-            public boolean onItemLongClick(final AdapterView<?> adapterView,
-                                           final View view,
-                                           final int position,
-                                           final long id) {
-                final InteractionAdapter adapter = ((AdapterView<InteractionAdapter>) adapterView).getAdapter();
-                final InteractionCell cell = adapter.getItem(position);
-
-                final DialogInterface.OnClickListener on_ok =
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(final DialogInterface iface, final int which) {
-                                adapter.removeCell(position);
-                            }
-                        };
-
-                final String msg = String.format("Do you want to remove cell\n%s\n%s",
-                        cell.input,
-                        cell.output);
-
-                AlertDialog.Builder builder =
-                        new AlertDialog.Builder(activity);
-                builder.setTitle("Confirm history item removal")
-                        .setCancelable(true)
-                        .setIcon(android.R.drawable.stat_sys_warning)
-                        .setMessage(msg)
-                        .setPositiveButton(android.R.string.ok, on_ok)
-                        .setNegativeButton(android.R.string.cancel, null);
-                builder.show();
-                return true;
-            }
-        };
-        interactionHistoryView.setOnItemLongClickListener(removeCell);
-
+        registerForContextMenu(interactionHistoryView);
 
         final Button enter = (Button) findViewById(R.id.button_enter);
         enter.setOnClickListener(new View.OnClickListener() {
@@ -294,6 +242,37 @@ public class MaximaActivity extends Activity {
             }
         });
 
+        /*
+        webview = new WebView(this);
+        webview.getSettings().setJavaScriptEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            WebView.setWebContentsDebuggingEnabled(true);
+        }
+        float sc = settings.getFloat("maxima main scale", 1.5f);
+        webview.setInitialScale((int) (100 * sc));
+		webview.getSettings().setBuiltInZoomControls(true);
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
+            webview.getSettings().setDisplayZoomControls(false);
+        }
+        */
+
+
+        /*
+        final StringBuilder buf = new StringBuilder();
+        final InputStream json = getAssets().open("book/contents.json");
+        final BufferedReader in =
+                new BufferedReader(new InputStreamReader(json, "UTF-8"));
+        String str;
+
+        while ((str = in.readLine()) != null) {
+            buf.append(str);
+        }
+
+        in.close();
+
+        webview.loadData(encodedHtml, "text/html", null);
+        */
+
         if (maximaRequiresInstall()) {
             final Intent intent = new Intent(this, MOAInstallerActivity.class);
             intent.setAction(Intent.ACTION_VIEW);
@@ -301,15 +280,118 @@ public class MaximaActivity extends Activity {
             this.startActivityForResult(intent, 0);
         } else {
             startMaximaProcess();
-            /*
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    startMaximaProcess();
-                }
-            }).start();
-            */
         }
+    }
+
+    @Override
+    public void onCreateContextMenu(final ContextMenu menu, final View view, final ContextMenu.ContextMenuInfo contextMenuInfo) {
+
+        super.onCreateContextMenu(menu, view, contextMenuInfo);
+
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) contextMenuInfo;
+        Assert.assertNotNull(info);
+
+        final InteractionCell cell = interactionHistoryAdapter.getItem(info.position);
+        if (cell.isNotice) {
+            return;
+        }
+
+        final MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.maxima_interaction_cell_item_context_menu, menu);
+
+        switch (cell.outputType) {
+            case OutputText:
+                menu.removeItem(R.id.maxima_context_menu_explore_graph);
+                break;
+            case OutputSvg:
+                break;
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(final MenuItem item) {
+        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        Assert.assertNotNull(info);
+        final InteractionCell cell = interactionHistoryAdapter.getItem(info.position);
+
+        switch (item.getItemId()) {
+            case R.id.maxima_context_menu_reuse_input:
+                if (cell.isNotice) {
+                    Toast.makeText(this, "Not reusing notice", Toast.LENGTH_LONG).show();
+                } else {
+                    inputArea.setText(cell.input);
+                }
+                return true;
+            case R.id.maxima_context_menu_reuse_output:
+                if (cell.isNotice) {
+                    Toast.makeText(this, "Not reusing notice", Toast.LENGTH_LONG).show();
+                } else {
+                    final String out = getOutput(cell.outputLabel);
+                    if (out == null) {
+                        Toast.makeText(this, "No output to reuse", Toast.LENGTH_LONG).show();
+                    } else {
+                        inputArea.setText(out);
+                    }
+                }
+                return true;
+            case R.id.maxima_context_menu_copy_input:
+                if (cell.isNotice) {
+                    Toast.makeText(this, "Not reusing notice", Toast.LENGTH_LONG).show();
+                } else {
+                    copyToClipboard(cell.input);
+                }
+                return true;
+            case R.id.maxima_context_menu_copy_output:
+                if (cell.isNotice) {
+                    Toast.makeText(this, "Not reusing notice", Toast.LENGTH_LONG).show();
+                } else {
+                    final String out = getOutput(cell.outputLabel);
+                    if (out == null) {
+                        Toast.makeText(this, "No output to copy", Toast.LENGTH_LONG).show();
+                    } else {
+                        copyToClipboard(out);
+                    }
+                }
+                return true;
+            case R.id.maxima_context_menu_explore_graph:
+                showInlineGraph(cell.output);
+                return true;
+            case R.id.maxima_context_menu_delete:
+                if (cell.isNotice) {
+                    Toast.makeText(this, "Not removing notice", Toast.LENGTH_LONG).show();
+                    return true;
+                }
+
+                final DialogInterface.OnClickListener on_ok =
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(final DialogInterface iface, final int which) {
+                                interactionHistoryAdapter.removeCell(info.position);
+                            }
+                        };
+
+                final String msg;
+                switch (cell.outputType) {
+                    case OutputText:
+                        msg = String.format("Do you want to remove cell\n%s\n%s", cell.input, cell.output);
+                        break;
+                    case OutputSvg:
+                        msg = String.format("Do you want to remove cell\n%s", cell.input);
+                        break;
+                    default:
+                        msg = "Impossible";
+                }
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Confirm history item removal")
+                        .setCancelable(true)
+                        .setIcon(android.R.drawable.stat_sys_warning)
+                        .setMessage(msg)
+                        .setPositiveButton(android.R.string.ok, on_ok)
+                        .setNegativeButton(android.R.string.cancel, null);
+                builder.show();
+                return true;
+        }
+        return super.onContextItemSelected(item);
     }
 
     // Returns whether maxima installation is up to date
@@ -328,133 +410,37 @@ public class MaximaActivity extends Activity {
     }
 
     private void startMaximaProcess() {
-        Log.d("MoA", "startMaximaProcess()");
-        try {
-            sem.acquire();
-        } catch (InterruptedException e1) {
-            Log.d("MoA", "exception1");
-            e1.printStackTrace();
-        }
-
-        CpuArchitecture.initCpuArchitecture();
-
         if (!(FileUtils.exists(internalDir + "/maxima-" + mvers.versionString())) &&
                 !(FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
-            this.finish();
+            Toast.makeText(this, "Maxima executable does not exist, terminating", Toast.LENGTH_LONG).show();
+            finish();
         }
-        final List<String> maximaCmd = new ArrayList<>();
-        maximaCmd.add(internalDir + "/" + CpuArchitecture.getMaximaExecutableName());
-        maximaCmd.add("--init-lisp=" + internalDir + "/init.lisp");
+        final Intent intent = new Intent(this, MaximaService.class);
+        startService(intent);
 
-        try {
-            maximaProccess = new CommandExec(maximaCmd);
-        } catch (IOException e) {
-            Log.d("MoA", "Exception while initialising maxima process: " + e);
-            exitMOA();
-        }
-        maximaProccess.clearOutputBuffer();
-        sem.release();
-        Log.v("MoA", "sem released.");
-    }
+        final Context cxt = this;
+        final ServiceConnection conn = new ServiceConnection() {
 
-    public void processCommand(final String commandRaw) {
-        try {
-            Log.v("MoA", "processCommand");
-            sem.acquire();
-        } catch (InterruptedException e1) {
-            Log.d("MoA", "failed to acquire semaphore");
-            e1.printStackTrace();
-            exitMOA();
-        }
-        sem.release();
+            @Override
+            public void onServiceConnected(ComponentName componentName, IBinder binder) {
+                serviceBinder = (MaximaService.MaximaBinder) binder;
 
-        Log.v("MoA", "semaphore released");
-        final String commandTrimmed = commandRaw.trim();
-        if (commandTrimmed.isEmpty()) {
-            return;
-        }
-        final String command = maxima_syntax_check(commandTrimmed);
-        prepareTmpDir();
+                interactionHistoryAdapter = new InteractionAdapter(serviceBinder.getInteractionHistory());
+                //interactionHistoryAdapter.addCell(
+                //    new InteractionCell(initialHeadline, firstMessage, InteractionCell.OutputType.OutputText));
+                interactionHistoryView.setAdapter(interactionHistoryAdapter);
 
-        try {
-            Log.d("MoA", "Sending command " + command);
-            maximaProccess.sendMaximaInput(command + "\n");
-        } catch (IOException e) {
-            Log.d("MoA", "Maxima threw IOException: " + e);
-            e.printStackTrace();
-            exitMOA();
-        } catch (Exception e) {
-            Log.d("MoA", "Maxima threw some other Exception: " + e);
-            e.printStackTrace();
-            exitMOA();
-        }
-
-        /*
-        final String cmdstr2 = command;
-        runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.UpdateInput('"
-                + escapeChars(cmdstr2) + "<br>" + "')");}});
-        */
-
-        OutputType maximaOutType = OutputType.OutputText;
-        String maximaResult = "";
-        {
-            String maxOut = maximaProccess.getMaximaOutput();
-            Pair<Boolean, String> p = isStartQepcadString(maxOut);
-            if (p.first) {
-                while (p.first) {
-                    maximaResult += p.second;
-                    final String qepcadExe =
-                            QEPCAD_DIR + "/bin/qepcad" +
-                                    (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86) ? ".x86" : "");
-                    final List<String> qepcadCmd = new ArrayList<>();
-                    qepcadCmd.add(QEPCAD_DIR + "/qepcad.sh");
-                    qepcadCmd.add(qepcadExe);
-                    try {
-                        new CommandExec(qepcadCmd);
-                    } catch (IOException e) {
-                        Log.d("MoA", "Exception while executing qepcad: " + e);
-                    }
-                    try {
-                        maximaProccess.sendMaximaInput("qepcad finished\n");
-                    } catch (IOException e) {
-                        Log.d("MoA", "Exception when reporting to maxima that qepcad finished: " + e);
-                    }
-                    maxOut = maximaProccess.getMaximaOutput();
-                    p = isStartQepcadString(maxOut);
-                }
-                maximaResult += maxOut;
-            } else {
-                maximaResult = maxOut;
+                binderInitialised.countDown();
             }
-        }
 
-        Log.d("MoA", "onEditorAction: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
-        if (FileUtils.exists(gnuplotInputFile())) {
-            final List<String> gnuplotCmd = new ArrayList<String>();
-            final String gnuplotExe =
-                    internalDir + "/additions/gnuplot/bin/gnuplot" +
-                            (CpuArchitecture.getCpuArchitecture().equals(CpuArchitecture.Arch.x86) ? ".x86" : "") ;
-            gnuplotCmd.add(gnuplotExe);
-            gnuplotCmd.add(gnuplotInputFile());
-            try {
-                Log.d("MoA", "processCommand: starting gnuplot command " + gnuplotCmd);
-                new CommandExec(gnuplotCmd);
-            } catch (IOException e) {
-                Log.d("MoA", "processCommand: failed to execute gnuplot: " + e);
+            @Override
+            public void onServiceDisconnected(ComponentName componentName) {
+                serviceBinder = null;
+                Log.d(TAG, "Service disconnected for no apparent reason");
+                Toast.makeText(cxt, "Maxima service disconnected for no reason!", Toast.LENGTH_LONG).show();
             }
-            final File gnuplotOut = new File(GNUPLOT_OUT);
-            if (FileUtils.exists(gnuplotOut)) {
-                maximaOutType = OutputType.OutputSvg;
-                try {
-                    maximaResult = FileUtils.readFile(gnuplotOut);
-                } catch (IOException e) {
-                    Log.d("MoA", "processCommand: gnuplot graph does not exist: " + e);
-                }
-                showGraph(GNUPLOT_OUT);
-            }
-        }
-
-        displayMaximaCmdResults(maximaOutType, commandRaw, maximaResult);
+        };
+        bindService(intent, conn, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -477,7 +463,7 @@ public class MaximaActivity extends Activity {
                 retval = true;
                 break;
             case R.id.maxima_main_menu_graph:
-                showGraph(GNUPLOT_OUT);
+                showGraph(MaximaService.GNUPLOT_OUT);
                 retval = true;
                 break;
             case R.id.maxima_main_menu_quit:
@@ -488,16 +474,19 @@ public class MaximaActivity extends Activity {
                 showManual();
                 retval = true;
                 break;
+            case R.id.maxima_main_menu_nextexample:
+                copyExampleInputToInputArea();
+                break;
             case R.id.maxima_main_menu_save:
-                sessionMenu("ssave();");
+                processCommand("ssave();");
                 retval = true;
                 break;
             case R.id.maxima_main_menu_restore:
-                sessionMenu("srestore();");
+                processCommand("srestore();");
                 retval = true;
                 break;
             case R.id.maxima_main_menu_playback:
-                sessionMenu("playback();");
+                processCommand("playback();");
                 retval = true;
                 break;
             case R.id.maxima_main_menu_loadscript:
@@ -510,50 +499,32 @@ public class MaximaActivity extends Activity {
         return retval;
     }
 
+    private void processCommand(final String commandRaw) {
+        final String command = commandRaw.trim();
+        if (command.isEmpty()) {
+            return;
+        }
 
+        try {
+            binderInitialised.await();
+        } catch (InterruptedException e) {
+            Log.d(TAG, "Failed to await for binder initialisation" + e);
+            Toast.makeText(this, "Failed to wait for maxima service", Toast.LENGTH_LONG).show();
+            return;
+        }
+        final InteractionCell result = serviceBinder.performCommand(commandRaw);
 
-    private Pair<Boolean, String> isStartQepcadString(final String res) {
-        final int i = res.indexOf("start qepcad");
-        if (i < 0) {
-            return new Pair<>(false, "");
-        } else if (i == 0) {
-            return new Pair<>(true, "");
-        } else {
-            // i>0
-            return new Pair<>(true, res.substring(0, i));
+        // interactionHistoryAdapter.addCell(result); // Already done by service
+        interactionHistoryAdapter.notifyDataSetChanged();
+        interactionHistoryView.smoothScrollToPosition(interactionHistoryAdapter.getCount() - 1);
+
+        // Delete temporary script file:
+        if (temporaryScriptFile != null) {
+            temporaryScriptFile.delete();
         }
     }
 
-    private String maxima_syntax_check(final String cmd) {
-        /*
-         * Search the last char which is not white spaces. If the last char is
-         * semi-colon or dollar, that is OK. Otherwise, semi-colon is added at
-         * the end.
-         */
-        int i = cmd.length() - 1;
-        Assert.assertTrue(i >= 0);
-        char c = ';';
-        while (i >= 0) {
-            c = cmd.charAt(i);
-            if (c == ' ' || c == '\t') {
-                i--;
-            } else {
-                break;
-            }
-        }
-
-        if (c == ';' || c == '$') {
-            return cmd.substring(0, i + 1);
-        } else {
-            return cmd.substring(0, i + 1) + ';';
-        }
-    }
-
-    private String escapeChars(String cmd) {
-        return substitute(cmd, "'", "\\'");
-    }
-
-    private void displayMaximaCmdResults(final OutputType typ, final String input, final String output) {
+    private void displayMaximaCmdResults(final InteractionCell.OutputType typ, final String input, final String output) {
         Log.v("MoA cmd", output);
         /*
         final String[] resArray = output.split("\\$\\$\\$\\$\\$\\$");
@@ -575,27 +546,6 @@ public class MaximaActivity extends Activity {
             }
         }
         */
-        final String[] lines = output.split("\n");
-        StringBuilder filtered = new StringBuilder();
-		// Strip prompts
-        for (final String line : lines) {
-            final String line2 = line.trim();
-            if (line2.startsWith("(%i") && line2.endsWith(")")) {
-                // skip prompt line
-            } else {
-                filtered.append(line);
-                filtered.append("\n");
-            }
-        }
-        interactionHistory.addCell(new InteractionCell(
-                input,
-                filtered.toString(),
-                typ));
-        interactionHistoryView.smoothScrollToPosition(interactionHistory.getCount() - 1);
-        //Delete temporary script file:
-        if (temporaryScriptFile != null) {
-            temporaryScriptFile.delete();
-        }
     }
 
     private String substCRinMBOX(final String str) {
@@ -609,7 +559,7 @@ public class MaximaActivity extends Activity {
             final int contentEnd = tmp.indexOf("}", contentStart);
             Assert.assertTrue(contentEnd > 0);
             final String contents = tmp.substring(contentStart, contentEnd);
-            res.append(substitute(contents, "\n", "}\\\\\\\\ \\\\mbox{"));
+            res.append(contents.replace("\n", "}\\\\\\\\ \\\\mbox{"));
             tmp = tmp.substring(contentEnd, tmp.length());
         }
         res.append(tmp);
@@ -631,37 +581,18 @@ public class MaximaActivity extends Activity {
         return texStr;
     }
 
-    static private String substitute(final String input, final String pattern, final String replacement) {
-        int index = input.indexOf(pattern);
-
-        if (index == -1) {
-            return input;
-        }
-
-        final StringBuffer buffer = new StringBuffer();
-
-        buffer.append(input.substring(0, index)).append(replacement);
-
-        if (index + pattern.length() < input.length()) {
-            final String rest = input.substring(index + pattern.length(),
-                    input.length());
-            buffer.append(substitute(rest, pattern, replacement));
-        }
-        return buffer.toString();
-    }
-
     private void showHTML(final String url, final boolean hwaccel) {
         final Intent intent = new Intent(this, HTMLActivity.class);
         intent.setAction(Intent.ACTION_VIEW);
         intent.putExtra("url", url);
         intent.putExtra("hwaccel", hwaccel);
-        this.startActivity(intent);
+        startActivity(intent);
     }
 
     private void showPreference() {
         final Intent intent = new Intent(this, MoAPreferenceActivity.class);
         intent.setAction(Intent.ACTION_VIEW);
-        this.startActivity(intent);
+        startActivity(intent);
     }
 
     private void showManual() {
@@ -669,52 +600,33 @@ public class MaximaActivity extends Activity {
         intent.setAction(Intent.ACTION_VIEW);
         intent.putExtra("url", manURL);
         intent.putExtra("manLangChanged", false);
-        this.startActivityForResult(intent, 0);
+        startActivityForResult(intent, 0);
     }
 
     private void showGraph(final String path) {
-        Log.d("MoA", "showGraph: started");
-        Log.d("MoA", "showGraph: graph file " + path + " exists: " + FileUtils.exists(path));
+        Log.d(TAG, "showGraph: started");
+        Log.d(TAG, "showGraph: graph file " + path + " exists: " + FileUtils.exists(path));
         if (FileUtils.exists(path)) {
             final Intent intent = new Intent(this, GnuplotGraphActivity.class);
             intent.setAction(Intent.ACTION_VIEW);
             intent.putExtra("graph", path);
-            this.startActivity(intent);
+            startActivity(intent);
         } else {
             Toast.makeText(this, getString(R.string.toast_no_graph), Toast.LENGTH_LONG).show();
         }
     }
 
-    // Get maxima's gnuplot graph specification that should be passed to the gnuplot executable.
-    // Maxima names this output file using it's PID, so don't simplify this function too much.
-    private String gnuplotInputFile() {
-        return APP_DATA_TMP_DIR + "/maxout" + maximaProccess.getPID() + ".gnuplot";
-    }
-
-    private void prepareTmpDir() {
-        final File tmpDir = new File(APP_DATA_TMP_DIR);
-        if (tmpDir.isFile()) {
-            tmpDir.delete();
-            tmpDir.mkdir();
-        } else if (tmpDir.isDirectory()) {
-            for (final File f : tmpDir.listFiles()) {
-                f.delete();
-            }
-        } else {
-            tmpDir.mkdir();
-        }
+    private void showInlineGraph(final String svg) {
+        Log.d(TAG, "showInlineGraph: started");
+        final Intent intent = new Intent(this, GnuplotGraphActivity.class);
+        intent.setAction(Intent.ACTION_VIEW);
+        intent.putExtra("graph-inline", svg);
+        startActivity(intent);
     }
 
     private void exitMOA() {
-        try {
-            maximaProccess.sendMaximaInput("quit();\n");
-            finish();
-        } catch (IOException e) {
-            Log.d("MoA", "exception7");
-            e.printStackTrace();
-        } catch (Exception e) {
-            Log.d("MoA", "exception8");
-            e.printStackTrace();
+        if (serviceBinder != null) {
+            serviceBinder.quit();
         }
         finish();
     }
@@ -722,28 +634,15 @@ public class MaximaActivity extends Activity {
     private boolean maximaBinaryExists() {
         CpuArchitecture.initCpuArchitecture();
         final String res = CpuArchitecture.getMaximaExecutableName();
-        return (new File(internalDir.getAbsolutePath() + "/" + res)).exists();
+        return FileUtils.exists(internalDir.getAbsolutePath() + "/" + res);
     }
 
     @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
-        if (event.getAction() == KeyEvent.ACTION_DOWN) {
-            switch (event.getKeyCode()) {
-                case KeyEvent.KEYCODE_BACK:
-                    Toast.makeText(this, getString(R.string.quit_hint), Toast.LENGTH_LONG)
-                            .show();
-                    return true;
-            }
+    public boolean dispatchKeyEvent(final KeyEvent event) {
+        if (event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+            Toast.makeText(this, getString(R.string.quit_hint), Toast.LENGTH_LONG).show();
         }
         return super.dispatchKeyEvent(event);
-    }
-
-    private void sessionMenu(String cmd) {
-        inputArea.setText(cmd);
-        inputArea.dispatchKeyEvent(
-                new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
-        inputArea.dispatchKeyEvent(
-                new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
     }
 
     private void selectScriptFile() {
@@ -809,13 +708,12 @@ public class MaximaActivity extends Activity {
         inputArea.setText(command);
     }
 
-
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        Log.v("MoA", "onActivityResult()");
+        Log.v(TAG, "onActivityResult()");
         // super.onActivityResult(requestCode, resultCode, data);
         final String sender = data != null ? data.getStringExtra("sender") : null;
-        Log.v("MoA", "sender = " + sender);
+        Log.v(TAG, "sender = " + sender);
         if (sender == null) {
             if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
                 //User has selected a script file to load.
@@ -823,7 +721,7 @@ public class MaximaActivity extends Activity {
                 //Copy file contents to input area:
                 copyScriptFileToInputArea(uri);
             }
-        } else if (sender != null && sender.equals("manualActivity")) {
+        } else if (sender.equals("manualActivity")) {
             if (resultCode == RESULT_OK) {
                 final String mcmd = data.getStringExtra("maxima command");
                 if (mcmd != null) {
@@ -861,7 +759,7 @@ public class MaximaActivity extends Activity {
     }
 
     private void copyExample(final String mcmd) {
-        Log.d("MoA", "copyExample()");
+        Log.d(TAG, "copyExample()");
         String[] mcmd2 = mcmd.split("\n\\(%");
         mcmd2[0] = mcmd2[0].replaceFirst("^\\(%", "");
         for (int i = 0; i < mcmd2.length; i++) {
@@ -874,7 +772,7 @@ public class MaximaActivity extends Activity {
                 j++;
             }
         }
-        final String[] mcmdArray = new String[j];
+        mcmdArray = new String[j];
         j = 0;
         for (int i = 0; i < mcmd2.length; i++) {
             if (mcmd2[i].startsWith("i")) {
@@ -892,22 +790,47 @@ public class MaximaActivity extends Activity {
                 j++;
             }
         }
-        // mcmdArrayIndex = 0;
-        copyExampleInputToInputArea(mcmdArray);
+        mcmdArrayIndex = 0;
+        copyExampleInputToInputArea();
     }
 
-    private void copyExampleInputToInputArea(final String [] mcmdArray) {
+    private void copyExampleInputToInputArea() {
         if (mcmdArray == null) {
+            Toast.makeText(this, "No examples selected", Toast.LENGTH_LONG).show();
             return;
         }
-        Log.d("MoA", "copyExampleInputToInputArea()");
-        inputArea.setText(mcmdArray[0]);
+        Log.d(TAG, "copyExampleInputToInputArea()");
+        inputArea.setText(mcmdArray[mcmdArrayIndex]);
         // inputArea.setSelection(mcmdArray[0].length());
         inputArea.requestFocus();
-        // mcmdArrayIndex++;
-        // if (mcmdArrayIndex == mcmdArray.length) {
-        //     allExamplesFinished = true;
-        //     mcmdArrayIndex = 0;
-        // }
+        mcmdArrayIndex++;
+        if (mcmdArrayIndex == mcmdArray.length) {
+            mcmdArrayIndex = 0;
+            Toast.makeText(this, "All examples finished", Toast.LENGTH_LONG).show();
+        }
     }
+
+    private void copyToClipboard(final String str) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
+            final ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (clipboardManager != null) {
+                final ClipData clip = android.content.ClipData.newPlainText("text", str);
+                if (clip != null) {
+                    clipboardManager.setPrimaryClip(clip);
+                }
+            }
+        }
+    }
+
+    private String getOutput(final String outputLabel) {
+        try {
+            binderInitialised.await();
+        } catch (InterruptedException e) {
+            Log.d(TAG, "Failed to await for binder initialisation" + e);
+            Toast.makeText(this, "Failed to wait for maxima service", Toast.LENGTH_LONG).show();
+            return null;
+        }
+        return serviceBinder.getOutput(outputLabel);
+    }
+
 }

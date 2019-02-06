@@ -327,13 +327,16 @@
       ((eq maxima::$display2d 'maxima::$imaxima-tex)
        (if (and (equal (car form) '(mlabel))
                 (not (null (second form))))
-           (format t "$$$$$$ RO1 ~A ~A $$$$$$" (second form) (maxima::$tex1 (third form)))
+           (format t "[[[[~A]]]]~%$$$$$$ RO1 ~A $$$$$$" (second form) (maxima::$tex1 (third form)))
          (format t "$$$$$$ RO2 ~A $$$$$$" (maxima::$tex1 form))))
       ((eq maxima::$display2d 'maxima::$imaxima-ascii)
        (if (and (equal (car form) '(mlabel))
                 (not (null (second form))))
-           (funcall old-displa (third form))
-           (funcall old-displa form)))
+           (progn
+             ;; label
+             (format t "[[[[~A]]]]~%" (second form))
+             (funcall old-displa (third form)))
+         (funcall old-displa form)))
       (t
        (funcall old-displa form)))
 

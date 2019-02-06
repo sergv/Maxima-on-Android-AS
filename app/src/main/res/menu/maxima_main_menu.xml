@@ -29,10 +29,14 @@
             <item android:id="@+id/maxima_main_menu_playback" android:title="@string/menu_session_playback"/>
         </menu>
     </item>
+    <item
+        android:id="@+id/maxima_main_menu_nextexample"
+        android:title="@string/menu_next_sample"/>
 
     <item
         android:id="@+id/maxima_main_menu_loadscript"
         android:titleCondensed="Load script file"
         android:title="@string/menu_load_script"/>
+
 
 </menu>

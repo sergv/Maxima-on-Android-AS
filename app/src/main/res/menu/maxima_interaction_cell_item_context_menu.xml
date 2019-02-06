@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/maxima_context_menu_reuse_input"
+        android:titleCondensed="Reuse input"
+        android:title="Reuse input" />
+
+    <item
+        android:id="@+id/maxima_context_menu_reuse_output"
+        android:titleCondensed="Reuse output"
+        android:title="Reuse output" />
+
+    <item
+        android:id="@+id/maxima_context_menu_copy_input"
+        android:titleCondensed="Copy input"
+        android:title="Copy input" />
+
+    <item
+        android:id="@+id/maxima_context_menu_copy_output"
+        android:titleCondensed="Copy output"
+        android:title="Copy output" />
+
+    <item
+        android:id="@+id/maxima_context_menu_explore_graph"
+        android:titleCondensed="Explore graph"
+        android:title="Explore graph" />
+
+    <item
+        android:id="@+id/maxima_context_menu_delete"
+        android:titleCondensed="Delete"
+        android:title="Delete" />
+
+</menu>

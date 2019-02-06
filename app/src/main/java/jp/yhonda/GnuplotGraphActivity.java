@@ -37,10 +37,7 @@ import com.caverock.androidsvg.SVG;
 import com.caverock.androidsvg.SVGImageView;
 import com.caverock.androidsvg.SVGParseException;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class GnuplotGraphActivity extends AppCompatActivity {
@@ -50,7 +47,7 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 	private static double ZOOM_FACTOR = 0.25;
 
 	private ZoomControls zoomControls;
-	private File graphFile;
+	private String graphSvgContents;
 
 	private final PermissionRequestsManager mPermissionManager;
 
@@ -71,20 +68,30 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 
 		final Intent origIntent = getIntent();
 		final String graphFile = origIntent.getStringExtra("graph");
-		this.graphFile = new File(graphFile);
+
+		final String svgContents;
+		if (graphFile == null) {
+			svgContents = origIntent.getStringExtra("graph-inline");
+		} else {
+			try {
+				svgContents = FileUtils.readFile(new File(graphFile));
+			} catch (IOException e) {
+				Log.d("MoA", "Failed to read graph file: " + e);
+				Toast.makeText(this, "Failed to read graph file " + graphFile, Toast.LENGTH_LONG).show();
+				return;
+			}
+		}
 
 		final SVGImageView graphView = (SVGImageView) findViewById(R.id.gnuplot_graph_view);
 
 		try {
-			final SVG img = SVG.getFromInputStream(new BufferedInputStream(new FileInputStream(graphFile)));
+			final SVG img = SVG.getFromString(svgContents);
 			graphView.setSVG(img);
+			graphSvgContents = svgContents;
 			zoomControls = new ZoomControls(this, graphView, (int) img.getDocumentWidth(), (int) img.getDocumentHeight());
-		} catch (FileNotFoundException e) {
-			Log.d("MoA", "Graph file was not found: " + e);
-			Toast.makeText(this, "Graph file " + graphFile + " is misssing!", Toast.LENGTH_LONG).show();
 		} catch (SVGParseException e) {
-			Log.d("MoA", "Graph file contains invalid svg: " + e);
-			Toast.makeText(this, "Graph file " + graphFile + " contains invalid svg!", Toast.LENGTH_LONG).show();
+			Log.d("MoA", "Attempting to display invalid svg: " + e);
+			Toast.makeText(this, "Plot inspector was supplied invalid svg!", Toast.LENGTH_LONG).show();
 		}
 	}
 
@@ -113,18 +120,14 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 
 	public void onMenuSaveGraphToFile(final MenuItem item) {
 		//final Intent intentShareFile = new Intent(Intent.ACTION_SEND);
-		if (graphFile.exists()) {
+		if (graphSvgContents != null) {
 			final Intent intent = new Intent(Intent.ACTION_PICK);
 			intent.setAction("org.openintents.action.PICK_FILE");
 			intent.putExtra(Intent.EXTRA_TITLE,"Save SVG graph to");
 			intent.putExtra("org.openintents.extra.TITLE", "Save SVG graph to");
-			try {
-				startActivityForResult(intent, SAVE_GRAPH_RESULT_CODE);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+			startActivityForResult(intent, SAVE_GRAPH_RESULT_CODE);
 		} else {
-			Toast.makeText(this, "Graph file does not exist: " + graphFile, Toast.LENGTH_LONG).show();
+			Toast.makeText(this, "No graph available yet", Toast.LENGTH_LONG).show();
 		}
 	}
 
@@ -148,10 +151,10 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 											if (!dest.exists()) {
 												dest.createNewFile();
 											}
-											FileUtils.copyFile(graphFile, dest);
+											FileUtils.writeFile(dest, graphSvgContents);
 											Toast.makeText(act, "Graph " + dest + " saved", Toast.LENGTH_SHORT).show();
 										} catch (IOException e) {
-											Log.d("MoA", "failed to copy " + graphFile + " to " + dest + ": " + e);
+											Log.d("MoA", "failed to write graph to " + dest + ": " + e);
 											Toast.makeText(act, "Failed to copy graph to " + dest.getAbsolutePath(), Toast.LENGTH_LONG).show();
 										}
 										break;

@@ -14,8 +14,8 @@
   <com.caverock.androidsvg.SVGImageView
       xmlns:android="http://schemas.android.com/apk/res/android"
       android:id="@+id/interaction_cell_graph_output"
-      android:layout_width="fill_parent"
+      android:layout_width="wrap_content"
       android:layout_height="fill_parent"
-      android:gravity="center_horizontal|start"
+      android:gravity="start"
       />
 </LinearLayout>

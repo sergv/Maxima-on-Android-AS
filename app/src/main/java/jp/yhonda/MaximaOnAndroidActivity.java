@@ -113,7 +113,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
     final double scriptFileMaxSize = 1E7;
 
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	public void onCreate(final Bundle savedInstanceState) {
 		Log.d("MoA", "onCreate()");
 		super.onCreate(savedInstanceState);
 
@@ -623,6 +623,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		return substitute(cmd, "'", "\\'");
 	}
 
+
+
 	private void displayMaximaCmdResults(final String resString) {
 		Log.v("MoA cmd", resString);
 		final String[] resArray = resString.split("\\$\\$\\$\\$\\$\\$");
@@ -636,9 +638,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl("javascript:window.UpdateText('" + htmlStr + "')");}});
 			} else {
 				/* tex commands, as we are inside of $$$$$$...$$$$$$ */
-				String texStr = substCRinMBOX(resArray[i]);
-				texStr = substitute(texStr, "\n", " \\\\\\\\ ");
-				texStr = substituteMBOXVERB(texStr);
+				final String texStr =
+					substituteMBOXVERB(substitute(substCRinMBOX(resArray[i]), "\n", " \\\\\\\\ "));
 				final String urlstr = "javascript:window.UpdateMath('" + texStr + "')";
 				runOnUiThread(new Runnable() {@Override public void run() {webview.loadUrl(urlstr);}});
 			}
@@ -676,7 +677,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		final Matcher m = pat.matcher(texStr);
 		final StringBuffer sb = new StringBuffer();
 		if (m.find()) {
-			m.appendReplacement(sb,"\\\\\\\\text{$1");
+			m.appendReplacement(sb, "\\\\\\\\text{$1");
 			while (m.find()) {
 				m.appendReplacement(sb, "$1");
 			}
@@ -685,6 +686,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 		return texStr;
 	}
+
+
 
 	static private String substitute(final String input, final String pattern, final String replacement) {
 		int index = input.indexOf(pattern);
@@ -814,7 +817,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
 		super.onCreateOptionsMenu(menu);
-		getMenuInflater().inflate(R.menu.maxima_main_menu_ext, menu);
+		getMenuInflater().inflate(R.menu.maxima_main_menu, menu);
 		return true;
 	}
 
@@ -822,42 +825,42 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	public boolean onOptionsItemSelected(final MenuItem item) {
 		boolean retval = false;
 		switch (item.getItemId()) {
-		case R.id.maxima_main_menu_ext_about:
+		case R.id.maxima_main_menu_about:
 			showHTML("file:///android_asset/About_MoA/index.html", true);
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_preference:
+		case R.id.maxima_main_menu_preference:
 			showPreference();
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_graph:
+		case R.id.maxima_main_menu_graph:
 			showGraph(GNUPLOT_OUT);
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_quit:
+		case R.id.maxima_main_menu_quit:
 			exitMOA();
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_nextexample:
+		case R.id.maxima_main_menu_nextexample:
 			copyExampleInputToInputArea();
 			break;
-		case R.id.maxima_main_menu_ext_man:
+		case R.id.maxima_main_menu_man:
 			showManual();
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_save:
+		case R.id.maxima_main_menu_save:
 			sessionMenu("ssave();");
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_restore:
+		case R.id.maxima_main_menu_restore:
 			sessionMenu("srestore();");
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_playback:
+		case R.id.maxima_main_menu_playback:
 			sessionMenu("playback();");
 			retval = true;
 			break;
-		case R.id.maxima_main_menu_ext_loadscript:
+		case R.id.maxima_main_menu_loadscript:
             selectScriptFile();
 			break;
 
