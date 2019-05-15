@@ -891,8 +891,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 				@Override
 				public void onClick(final DialogInterface dialog, final int which) {
 					dialog.dismiss();
-					if (!textView.getText().toString().matches("")) {
-						copyScriptFileToInputArea(Uri.fromFile(new File(textView.getText().toString())));
+					final String contents = textView.getText().toString();
+					if (!contents.isEmpty()) {
+						copyScriptFileToInputArea(Uri.fromFile(new File(contents)));
 					}
 				}
 			});
@@ -907,7 +908,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 	}
 
-	private void copyScriptFileToInputArea(Uri fileUri) {
+	private void copyScriptFileToInputArea(final Uri fileUri) {
         //Copy script file contents into a temporary file:
         final File temporaryDirectory = getApplicationContext().getCacheDir();
         File temporaryFile = null;
