@@ -96,7 +96,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	String manURL;
 	boolean manLangChanged = true;
 	boolean allExamplesFinished = false;
-	final Semaphore sem = new Semaphore(1);
+	final Semaphore maximaProcessStartedSem = new Semaphore(1);
 
 	MultiAutoCompleteTextView inputArea;
 	WebView webview;
@@ -314,7 +314,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	private void startMaxima() {
 		Log.d("MoA", "startMaxima()");
 		try {
-			sem.acquire();
+			maximaProcessStartedSem.acquire();
 		} catch (InterruptedException e1) {
 			Log.d("MoA", "exception1");
 			e1.printStackTrace();
@@ -338,8 +338,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			exitMOA();
 		}
 		maximaProccess.clearOutputBuffer();
-		sem.release();
-		Log.v("MoA", "sem released.");
+		maximaProcessStartedSem.release();
+		Log.v("MoA", "maximaProcessStartedSem released.");
 	}
 
 	private void copyExample(final String mcmd) {
@@ -466,13 +466,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	public boolean onEditorAction(final TextView testview, final int id, final KeyEvent keyEvent) {
 		try {
 			Log.v("MoA", "onEditorAction");
-			sem.acquire();
+			maximaProcessStartedSem.acquire();
 		} catch (InterruptedException e1) {
 			Log.d("MoA", "exception3");
 			e1.printStackTrace();
 			exitMOA();
 		}
-		sem.release();
+		maximaProcessStartedSem.release();
 		if (!initialised) {
 			final SharedPreferences settings =
 				PreferenceManager.getDefaultSharedPreferences(this);
@@ -483,7 +483,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			initialised = true;
 		}
 
-		Log.v("MoA", "sem released");
+		Log.v("MoA", "maximaProcessStartedSem released");
 		String cmdstr = inputArea.getText().toString().trim();
 		if ((keyEvent == null) || (keyEvent.getAction() == KeyEvent.ACTION_UP)) {
 			try {
