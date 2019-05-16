@@ -98,7 +98,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	boolean allExamplesFinished = false;
 	final Semaphore sem = new Semaphore(1);
 
-	MultiAutoCompleteTextView editText;
+	MultiAutoCompleteTextView inputArea;
 	WebView webview;
 	ScrollView scview;
 
@@ -168,26 +168,26 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		webview.addJavascriptInterface(this, "MOA");
 
-		editText = (MultiAutoCompleteTextView) findViewById(R.id.editText1);
-		editText.setTextSize((float) Integer.parseInt(settings.getString("fontSize1", "20")));
+		inputArea = (MultiAutoCompleteTextView) findViewById(R.id.editText1);
+		inputArea.setTextSize((float) Integer.parseInt(settings.getString("fontSize1", "20")));
 		final Boolean bflag = settings.getBoolean("auto_completion_check_box_pref", true);
-		editText.setThreshold(bflag ? 2 : 100);
-		editText.setOnEditorActionListener(this);
+		inputArea.setThreshold(bflag ? 2 : 100);
+		inputArea.setOnEditorActionListener(this);
 
 		final ArrayAdapter<String> completionAdapter = new ArrayAdapter<>(
 				this,
 				android.R.layout.simple_dropdown_item_1line,
 				getResources().getStringArray(R.array.MaximaCompletionList));
-		editText.setTokenizer(new MaximaTokenizer());
-		editText.setAdapter(completionAdapter);
+		inputArea.setTokenizer(new MaximaTokenizer());
+		inputArea.setAdapter(completionAdapter);
 		webview.setOnTouchListener(this);
 
 		final Button enterB = (Button) findViewById(R.id.enterB);
 		enterB.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(final View v) {
-				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
-				editText.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
+				inputArea.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
+				inputArea.dispatchKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
 			}
 		});
 
@@ -239,9 +239,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 			if (resultCode == RESULT_OK) {
 				final String mcmd = data.getStringExtra("maxima command");
 				if (mcmd != null) {
-					editText.setText(mcmd);
-					editText.setSelection(mcmd.length());
-					editText.requestFocus();
+					inputArea.setText(mcmd);
+					inputArea.setSelection(mcmd.length());
+					inputArea.requestFocus();
 				}
 			}
 		} else if (sender.equals("MOAInstallerActivity")) {
@@ -284,7 +284,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		flag = globals.get("auto_completion_check_box_pref");
 		if (flag != null && flag.equals("true")) {
 			final Boolean bflag = sharedPrefs.getBoolean("auto_completion_check_box_pref", true);
-			editText.setThreshold(bflag ? 2 : 100);
+			inputArea.setThreshold(bflag ? 2 : 100);
         }
 
 		flag = globals.get("manURL");
@@ -297,7 +297,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 
 		flag = globals.get("fontSize1");
 		if (flag != null && flag.equals("true")) {
-			editText.setTextSize((float) Integer.parseInt(sharedPrefs.getString("fontSize1", "20")));
+			inputArea.setTextSize((float) Integer.parseInt(sharedPrefs.getString("fontSize1", "20")));
 		}
 
 		flag = globals.get("fontSize2");
@@ -389,9 +389,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		if (mcmdArray == null)
 			return;
 		Log.d("MoA", "copyExampleInputToInputArea()");
-		editText.setText(mcmdArray[mcmdArrayIndex]);
-		editText.setSelection(mcmdArray[mcmdArrayIndex].length());
-		editText.requestFocus();
+		inputArea.setText(mcmdArray[mcmdArrayIndex]);
+		inputArea.setSelection(mcmdArray[mcmdArrayIndex].length());
+		inputArea.requestFocus();
 		mcmdArrayIndex++;
 		if (mcmdArrayIndex == mcmdArray.length) {
 			allExamplesFinished = true;
@@ -402,10 +402,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	@JavascriptInterface
 	public void reuseByTouch(final String maximacmd) {
 		final String text = substitute(maximacmd, "<br>", "");
-		editText.post(new Runnable () {
+		inputArea.post(new Runnable () {
 			@Override
 			public void run() {
-				editText.setText(text);
+				inputArea.setText(text);
 			}
 			});
 	}
@@ -433,7 +433,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		final Matcher ma = pa.matcher(resString);
 		if (ma.find()) {
 			final String oText = ma.group(1).replace("\\'","'");
-			runOnUiThread(new Runnable() {@Override public void run() { editText.setText(oText); }});
+			runOnUiThread(new Runnable() {@Override public void run() { inputArea.setText(oText); }});
 			if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.HONEYCOMB) {
 				final ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 				final android.content.ClipData clip = android.content.ClipData.newPlainText("text", oText);
@@ -484,10 +484,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 		}
 
 		Log.v("MoA", "sem released");
-		String cmdstr = editText.getText().toString().trim();
+		String cmdstr = inputArea.getText().toString().trim();
 		if ((keyEvent == null) || (keyEvent.getAction() == KeyEvent.ACTION_UP)) {
 			try {
-				// cmdstr = editText.getText().toString();
+				// cmdstr = inputArea.getText().toString();
 				if (cmdstr.isEmpty()) {
 					return true;
 				}
@@ -871,10 +871,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
 	}
 
 	private void sessionMenu(String cmd) {
-		editText.setText(cmd);
-		editText.dispatchKeyEvent(
+		inputArea.setText(cmd);
+		inputArea.dispatchKeyEvent(
 			new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER));
-		editText.dispatchKeyEvent(
+		inputArea.dispatchKeyEvent(
 			new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER));
 	}
 
@@ -936,8 +936,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity implements
         }
         temporaryScriptFile = temporaryFile;   //Store temp file for later deletion
 
-        //Build maxima load command and write it to the editText:
+        //Build maxima load command and write it to the inputArea:
         final String command = "batch(\"" + temporaryFile.getAbsolutePath() + "\");";
-        editText.setText(command);
+        inputArea.setText(command);
     }
 }
