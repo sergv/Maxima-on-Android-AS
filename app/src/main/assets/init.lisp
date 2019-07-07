@@ -326,10 +326,15 @@
   (defun maxima::displa (form)
     (cond
       ((eq maxima::$display2d 'maxima::$imaxima-tex)
-       (if (and (equal (car form) '(mlabel))
-                (not (null (second form))))
-           (format t "[[[[~A]]]]~%$$$$$$ ~A $$$$$$" (second form) (maxima::$tex1 (third form)))
-         (format t "$$$$$$ ~A $$$$$$" (maxima::$tex1 form))))
+       ;; label
+       (when (second form)
+         (format t "[[[[~A]]]]~%" (second form)))
+       ;; Formula
+       (format t "$$$$$$ ~A $$$$$$"
+               (maxima::$tex1 (if (and (equal (car form) '(mlabel))
+                                       (not (null (second form))))
+                                  (third form)
+                                form))))
       ((eq maxima::$display2d 'maxima::$imaxima-ascii)
        (if (and (equal (car form) '(mlabel))
                 (not (null (second form))))

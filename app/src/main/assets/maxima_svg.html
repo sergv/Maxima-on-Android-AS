@@ -20,10 +20,9 @@
       jax: ["input/TeX", "output/SVG"],
       showProcessingMessages: false,
       messageStyle: "none",
-<!--       TeX: {
+      TeX: {
         extensions: ["AMSmath.js", "AMSsymbols.js", "noErrors.js", "noUndefined.js"]
-      }
-      -->
+      },
       tex2jax: {
         displayMath: [['$$$$$$', '$$$$$$'], ["\\[", "\\]"]],
         processEscapes: true
@@ -36,190 +35,197 @@
 
     });
   </script>
-<script type="text/javascript" src="MathJax-2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
-<script>
-        (function() {
-        window.scrollToEnd = function() {
-            window.MOA.scrollToEnd();
+  <script type="text/javascript" src="MathJax-2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+  <script>
+    (function() {
+      window.scrollToEnd = function() {
+        window.MOA.scrollToEnd();
+      }
+
+      var onTouchInput = function(identifier) {
+        // console.log("onTouchInput: identifier = " + identifier);
+        window.MOA.onTouchInput(identifier);
+      }
+
+      var idsForIdentifier = {};
+
+      var linkWithIdentifier = function(identifier, id) {
+        if (!(identifier in idsForIdentifier)) {
+          idsForIdentifier[identifier] = [];
+        }
+        idsForIdentifier[identifier].push(id);
+      }
+
+      /*
+         Java-JS Interface function
+       */
+      window.UpdateInput = function(identifier, text) {
+        // console.log("UpdateInput text = " + text);
+        var lines = window.splitTextOnNewlines(text);
+        // console.log("UpdateInput lines.length = " + lines.length);
+
+        var tnode = document.createElement('span');
+        tnode.id = "input-" + identifier.toString();
+        linkWithIdentifier(identifier, tnode.id);
+        tnode.onclick = function(ev) {
+          // console.log("makeOnclickRBT: text = " + text);
+          onTouchInput(identifier);
         }
 
-        ReuseByTouch = function(text) {
-            var dectext = unescape(text);
-            console.log(dectext);
-            window.MOA.reuseByTouch(dectext);
+        for (var i = 0; i < lines.length; i++) {
+          if (!(lines[i] == "")) {
+            tnode.appendChild(document.createTextNode(lines[i]));
+          }
+        }
+        tnode.appendChild(document.createElement("br"));
+        MathJax.Hub.queue.Push(["appendNode", window, tnode]);
+      }
+
+      window.appendNode = function(node) {
+        document.getElementById("MathList").appendChild(node);
+      }
+
+      window.expSize = 16;
+      window.ChangeExpSize = function(s) {
+        window.expSize = s;
+        // console.log("ChangeExpSize" + window.expSize);
+      }
+
+      window.appendMathNode = function(parent, child) {
+        // console.log("appendMathNode: window.expSize = " + window.expSize);
+        var sizedChild = document.createElement("div");
+        sizedChild.style.fontSize = window.expSize + "px";
+        sizedChild.appendChild(child);
+        parent.appendChild(sizedChild);
+      }
+
+      window.splitTextOnNewlines = function(text) {
+        // console.log("splitTextOnNewlines: text = " + text);
+        var newtext = text.replace(/<br>/g, "\n");
+        var a       = newtext.split("\n");
+        // for (var i = 0; i < a.length; i++) {
+        //   console.log("splitTextOnNewlines: a[i] = " + a[i]);
+        // }
+        return a;
+      }
+
+      /* Java-JS Interface function */
+      window.UpdateOutputText = function(identifier, subid, text) {
+        // console.log("UpdateOutput identifier = " + identifier + ", text = " + text);
+        var lines = window.splitTextOnNewlines(text);
+
+        var tnode = document.createElement('span');
+        tnode.id = "output-" + identifier.toString() + "-" + subid;
+        linkWithIdentifier(identifier, tnode.id);
+        tnode.onclick = function(ev) {
+          // console.log("onTouchOutput, identifier = " + identifier);
+          window.MOA.onTouchOutput(identifier);
         }
 
-        /*
-            Java-JS Interface function
-         */
-        window.UpdateInput = function(text) {
-            console.log("UpdateInput " + text);
-            var textArray = window.splitText(text);
-            console.log("UpdateInput " + textArray.length);
-            var first = true;
-            var tnode = null;
-            var makeOnclickRBT = function(etext) {
-                // etext should be an escaped text
-                return function(ev) {
-                    console.log(etext);
-                    ReuseByTouch(etext);
-                }
-            }
-            for (var i = 0; i < textArray.length; i++) {
-                if (!(textArray[i] == "")) {
-                    if (first) {
-                        first = false;
-                        tnode = document.createElement('span');
-                        tnode.appendChild(document.createTextNode(textArray[i]));
-                        tnode.onclick = makeOnclickRBT(escape(textArray[i]));
-                        tnode.id      = textArray[i];
-                    } else {
-                        tnode = document.createTextNode(textArray[i]);
-                    }
-                    MathJax.Hub.queue.Push(["appendNode", window, tnode]);
-                }
-                if (i < textArray.length - 1) {
-                    tnode = document.createElement("br");
-                    MathJax.Hub.queue.Push(["appendNode", window, tnode]);
-                }
-            }
-            MathJax.Hub.queue.Push(["scrollToEnd", window]);
+        for (var i = 0; i < lines.length; i++) {
+          if (!(lines[i] == "")) {
+            tnode.appendChild(document.createTextNode(lines[i]));
+          }
+        }
+        tnode.appendChild(document.createElement("br"));
+        MathJax.Hub.queue.Push(["appendNode", window, tnode]);
+        MathJax.Hub.queue.Push(["scrollToEnd", window]);
+      }
+
+      /* Internal function */
+      function escapeDollars(text) {
+        var i = text.indexOf('$');
+        if (i == -1) {
+          // $は見つからなかった
+          return text;
+        } else if (i == 0) {
+          // 先頭が$だった
+          return '\\$' + escapeDollars(text.substring(1));
+        } else {
+          // $は２文字目以降だった
+          // $の直前が\出ない場合、$の直前までの文字列と'\\'+'$'とescDoller(残り)
+          // $の直前が\の場合、$の直前までの文字列と'$'とescDoller(残り)
+          var prefix = text.substring(0, i);
+          var dollar = prefix.endsWith('\\') ? '$' : '\\$';
+          var rest   = escapeDollars(text.substring(i + 1));
+          return prefix + dollar + rest;
+        }
+      }
+
+      /* Java-JS Interface function */
+
+      var delimiter = "$$$$$$";
+
+      window.UpdateOutputMath = function(identifier, subid, str) {
+        // console.log("UpdateOutputMath: str = " + str);
+
+        var tnode = document.createElement('div');
+        tnode.id = "output-" + identifier.toString() + "-" + subid;
+        linkWithIdentifier(identifier, tnode.id);
+        tnode.onclick = function(ev) {
+          // console.log("onTouchOutput, identifier = " + identifier);
+          window.MOA.onTouchOutput(identifier);
         }
 
-        window.appendNode = function(node) {
-            document.getElementById("MathList").appendChild(node);
-        }
+        formula = delimiter + escapeDollars(str) + delimiter;
+        tnode.appendChild(document.createTextNode(formula));
 
-        window.expSize = 16;
-        window.ChangeExpSize = function(s) {
-            window.expSize = s;
-            console.log("ChangeExpSize" + window.expSize);
-        }
-        window.appendNodeWithSize = function(node) {
-            console.log("appendNodeWithSize" + window.expSize);
-            var divnode = document.createElement("div");
-            divnode.style.fontSize = window.expSize + "px";
-            divnode.appendChild(node);
-            document.getElementById("MathList").appendChild(divnode);
-        }
+        var mathlist = document.getElementById("MathList");
+        MathJax.Hub.queue.Push(["appendMathNode", window, mathlist, tnode]);
+        // MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, mathlist]);
+        MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, tnode]);
+        MathJax.Hub.queue.Push(["scrollToEnd", window]);
+      }
 
-        window.splitText = function(text) {
-            console.log("splitText " + text);
-            var newtext = text.replace(/<br>/g, "\n");
-            var a       = newtext.split("\n");
-            for (var i = 0; i < a.length; i++) {
-                console.log(a[i]);
-            }
-            return a;
+      var svgNS = "http://www.w3.org/2000/svg";
+
+      window.UpdateOutputGraph = function(identifier, svgSource) {
+        // console.log("UpdateOutputGraph: identifier = " + identifier);
+
+        // var tnode = document.createElementNS(svgNS, 'svg');
+        var tnode = document.createElement('div');
+        tnode.id = "output-" + identifier.toString();
+        linkWithIdentifier(identifier, tnode.id);
+        tnode.onclick = function(ev) {
+          // console.log("onTouchInlineGraph, identifier = " + identifier);
+          window.MOA.onTouchInlineGraph(identifier);
         }
+        tnode.innerHTML += svgSource;
 
-        /*
-            Java-JS Interface function
-         */
-        window.UpdateText = function(text) {
-           console.log("UpdateText " + text);
-           var textArray = window.splitText(text);
-           for (var i = 0; i < textArray.length; i++) {
-               var re = /^\(%i[0-9]*\) /;
-               var res;
-               var tnode;
-               if (res = textArray[i].match(re)) {
-                   /* A string starting with input prompt. */
-                   console.log('batch input ' + res[0]);
-                   tnode = document.createTextNode(res[0]);
-                   MathJax.Hub.queue.Push(["appendNode", window, tnode ]);
-                   /* Input prompt was added as ordinary text. */
-                   /* The rest is added as reusable maxima command */
-                   window.UpdateInput(textArray[i].substring(res[0].length));
-               } else if (!(textArray[i] == "")) {
-                   tnode = document.createTextNode(textArray[i]);
-                   MathJax.Hub.queue.Push(["appendNode", window, tnode ]);
-               }
-               if (i < textArray.length - 1) {
-                   tnode = document.createElement("br");
-                   MathJax.Hub.queue.Push(["appendNode", window, tnode ]);
-               }
-           }
-           MathJax.Hub.queue.Push(["scrollToEnd", window ]);
+        MathJax.Hub.queue.Push(["appendNode", window, tnode]);
+        MathJax.Hub.queue.Push(["scrollToEnd", window]);
+      }
+
+      window.RemoveCell = function(identifier) {
+        var idsToDelete = idsForIdentifier[identifier];
+        // console.log("RemoveCell: idsToDelete = " + idsToDelete);
+        delete idsForIdentifier[identifier];
+        for (var i = 0; i < idsToDelete.length; i++) {
+          var node = document.getElementById(idsToDelete[i]);
+          // console.log("RemoveCell: node.id = " + node.id + ", node.parentNode = " + node.parentNode + ", node = " + node);
+          if (node.parentNode) {
+            node.parentNode.removeChild(node);
+          }
         }
-
-        /*
-        Internal function
-        */
-        function escDollars(text) {
-            var i = text.indexOf('$');
-            if (i == -1) {
-              // $は見つからなかった
-              return text;
-            } else if (i == 0) {
-              // 先頭が$だった
-              return '\\' + '$' + escDollars(text.substring(1));
-            } else {
-              // $は２文字目以降だった
-              // $の直前が\出ない場合、$の直前までの文字列と'\\'+'$'とescDoller(残り)
-              // $の直前が\の場合、$の直前までの文字列と'$'とescDoller(残り)
-              var a = text.substring(0, i);
-              var b = '';
-              if (text.substring(i - 1, i) == '\\') {
-                b = '$';
-              } else {
-                b = '\\' + '$';
-              }
-              var c = escDollars(text.substring(i + 1));
-              return a + b + c;
-            }
-        }
-
-
-        /*
-            Java-JS Interface function
-         */
-
-        window.UpdateMath = function(pack) {
-            console.log("UpdateMath " + pack);
-            var RR      = pack.match(/ *RO([1-2])/);
-            var text    = " $$$$$$ ";
-            var oNumStr = "";
-            if (RR[1] == "1") {
-                RR      = pack.match(/ *RO1 \$%([a-zA-Z][0-9]+)(.*)/);
-                text    = text + escDollars(RR[2]) + " $$$$$$ ";
-                oNumStr = RR[1].toLowerCase();
-            } else if (RR[1] == "2") {
-                RR      = pack.match(/ *RO2 (.*)/);
-                text    = text + escDollars(RR[1]) + " $$$$$$ ";
-                oNumStr = "nolabel";
-            } else {
-              console.log("Fatal error in UpdateMath.");
-              console.log(pack);
-              return;
-            }
-            var mathlist = document.getElementById("MathList");
-            var divElem  = document.createElement("div");
-            divElem.id = "moa1";
-            divElem.appendChild(document.createTextNode(text));
-            divElem.onclick = function() {
-                console.log("reuseOutput" + oNumStr);
-                window.MOA.reuseOutput(oNumStr);
-            }
-            MathJax.Hub.queue.Push(["appendNodeWithSize", window, divElem]);
-            MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, mathlist]);
-            MathJax.Hub.queue.Push(["scrollToEnd", window]);
-        }
-        })();
-</script>
+      }
+    })();
+  </script>
 
 
 </head>
 
 <body style="height: auto; font-size: 18pt">
-  <!-- <div id="MathOutput" style="display:none">$$ {} $$</div> -->
-  <div id="MathOutput" style="display: none">$$ {} $$</div>
   <div id="MathList" style="height: auto">
-    Maxima on Android 3.2.1 September 7, 2018<br> written by Yasuaki Honda,<br> powered by MathJax 2.7.5 for math rendering<br>powered by Gnuplot 5.2.4 for graph drawing<br>
-    <br>Use menu for about MoA/quit/man/redraw graph<br>You can touch previous commands for reuse, like input history.<br>You can touch command latex output for reuse.<br>You can touch manual examples to execute them in Maxima.<br>
-
-
-    <br>Maxima 5.41.0, ECL 16.1.3<br>Dedicated to the memory of William Schelter.<br> (%i1)
+    Maxima on Android 3.2.1 September 7, 2018<br>
+    written by Yasuaki Honda,<br>
+    powered by MathJax 2.7.5 for math rendering<br>
+    powered by Gnuplot 5.2.4 for graph drawing<br><br>
+    Use menu for about MoA/quit/man/redraw graph<br>
+    You can touch previous commands for reuse, like input history.<br>
+    You can touch command latex output for reuse.<br>
+    You can touch manual examples to execute them in Maxima.<br><br>
+    Maxima 5.41.0, ECL 16.1.3<br>
+    Dedicated to the memory of William Schelter.<br>
   </div>
 
 </body>

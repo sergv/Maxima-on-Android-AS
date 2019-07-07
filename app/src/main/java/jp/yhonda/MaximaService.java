@@ -13,15 +13,13 @@ import android.util.Log;
 import android.util.Pair;
 import android.widget.Toast;
 
-import junit.framework.Assert;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
@@ -68,7 +66,7 @@ public class MaximaService extends Service {
     private MaximaBinder binder = new MaximaBinder();
 
     public class InteractionHistory {
-        private final List<InteractionCell> cells = new ArrayList<>();
+        private final TreeMap<Integer, InteractionCell> cells = new TreeMap<>();
 
         public int getCount() {
             return cells.size();
@@ -78,12 +76,15 @@ public class MaximaService extends Service {
             return cells.get(i);
         }
 
-        public void addCell(final InteractionCell cell) {
-            cells.add(cell);
+        public InteractionCell addCell(final String input, final String output, final InteractionCell.OutputType outputType, final boolean isNotice, final String outputLabel) {
+            final int identifier = cells.size();
+            final InteractionCell cell = new InteractionCell(identifier, input, output, outputType, isNotice, outputLabel);
+            cells.put(identifier, cell);
+            return cell;
         }
 
-        public void removeCell(final int i) {
-            cells.remove(i);
+        public void removeCell(final int identifier) {
+            cells.remove(identifier);
         }
 
         public void clear() {
@@ -115,8 +116,11 @@ public class MaximaService extends Service {
 
         interactionHistory = new InteractionHistory();
         interactionHistory.addCell(
-                new InteractionCell(initialHeadline, firstMessage, InteractionCell.OutputType.OutputText, true, null));
-
+                initialHeadline,
+                firstMessage,
+                InteractionCell.OutputType.OutputText,
+                true,
+                "");
     }
 
     // NB Client activity should issue startService before binding
@@ -185,7 +189,7 @@ public class MaximaService extends Service {
                 cmdStr = cmdStr + " " + part;
             }
             Log.d(TAG, "MaximaService.startMaximaProcess: executing command" + cmdStr);
-            maximaProccess = new CommandExec(maximaCmd);
+            maximaProccess = CommandExec.execute(maximaCmd);
         } catch (IOException e) {
             Log.d(TAG, "Exception while initialising maxima process: " + e);
             exitMOA();
@@ -228,21 +232,22 @@ public class MaximaService extends Service {
 
     private void ensureMaximaStarted() {
         try {
-            Log.v(TAG, "processCommand");
+            Log.v(TAG, "ensureMaximaStarted: started");
             sem.acquire();
-        } catch (InterruptedException e1) {
+            Log.v(TAG, "ensureMaximaStarted: semaphore acquired");
+        } catch (final InterruptedException e) {
             Log.d(TAG, "failed to acquire semaphore");
-            e1.printStackTrace();
+            e.printStackTrace();
             exitMOA();
         }
         sem.release();
+        Log.v(TAG, "ensure maxima started: semaphore released");
     }
 
     private InteractionCell processCommand(final String commandRaw) {
         ensureMaximaStarted();
 
-        Log.v(TAG, "semaphore released");
-        final String command = maxima_syntax_check(commandRaw);
+        final String command = addCommandSemicolonIfNeeded(commandRaw);
         prepareTmpDir();
 
         try {
@@ -274,8 +279,8 @@ public class MaximaService extends Service {
                     qepcadCmd.add(QEPCAD_DIR + "/qepcad.sh");
                     qepcadCmd.add(qepcadExe);
                     try {
-                        new CommandExec(qepcadCmd);
-                    } catch (IOException e) {
+                        CommandExec.executeAndWait(qepcadCmd);
+                    } catch (Exception e) {
                         Log.d(TAG, "Exception while executing qepcad: " + e);
                         notifyUser("Failed to execute qepcad:\n" + e);
                     }
@@ -305,8 +310,8 @@ public class MaximaService extends Service {
             gnuplotCmd.add(gnuplotInputFile());
             try {
                 Log.d(TAG, "processCommand: starting gnuplot command " + gnuplotCmd);
-                new CommandExec(gnuplotCmd);
-            } catch (IOException e) {
+                CommandExec.executeAndWait(gnuplotCmd);
+            } catch (Exception e) {
                 Log.d(TAG, "processCommand: failed to execute gnuplot: " + e);
                 notifyUser("Failed to execute gnuplot:\n" + e);
             }
@@ -322,7 +327,7 @@ public class MaximaService extends Service {
             }
         }
 
-        String outputLabel = null;
+        String outputLabel = "";
         final String cleanedResult;
         {
             final Collection<String> lines = stripPromptLine(Arrays.asList(maximaResult.split("\n")));
@@ -334,19 +339,19 @@ public class MaximaService extends Service {
                 Log.d(TAG, "line2: " + line2);
                 if (line2.startsWith("[[[[") && line2.endsWith("]]]]")) {
                     outputLabel = line2.substring(4, line2.length() - 4);
+                } else if (line2.startsWith("(%i") && line2.endsWith(")")) {
+                    // skip
                 } else {
                     filtered.add(line);
                 }
             }
 
-            cleanedResult = joinLines(filtered).replace("\\\\", "\\");
+            cleanedResult = joinLines(filtered); //.replace("\\\\", "\\");
         }
-        Log.d(TAG, "Output label: " + outputLabel);
-        Log.d(TAG, "Cleaned result: " + cleanedResult);
+        Log.d(TAG, "Output label: '" + outputLabel + "'");
+        // Log.d(TAG, "Cleaned result: " + cleanedResult);
 
-        final InteractionCell result = new InteractionCell(commandRaw, cleanedResult, maximaOutType, false, outputLabel);
-        interactionHistory.addCell(result);
-        return result;
+        return interactionHistory.addCell(commandRaw, cleanedResult, maximaOutType, false, outputLabel);
     }
 
     private static String joinLines(final Collection<String> lines) {
@@ -363,7 +368,7 @@ public class MaximaService extends Service {
         return result.toString();
     }
 
-    private Collection<String> stripPromptLine(Collection<String> input) {
+    private Collection<String> stripPromptLine(final Collection<String> input) {
         final List<String> result = new ArrayList<>();
         for (final String line : input) {
             final String line2 = line.trim();
@@ -432,29 +437,9 @@ public class MaximaService extends Service {
         }
     }
 
-    private String maxima_syntax_check(final String cmd) {
-        /*
-         * Search the last char which is not white spaces. If the last char is
-         * semi-colon or dollar, that is OK. Otherwise, semi-colon is added at
-         * the end.
-         */
-        int i = cmd.length() - 1;
-        Assert.assertTrue(i >= 0);
-        char c = ';';
-        while (i >= 0) {
-            c = cmd.charAt(i);
-            if (c == ' ' || c == '\t') {
-                i--;
-            } else {
-                break;
-            }
-        }
-
-        if (c == ';' || c == '$') {
-            return cmd.substring(0, i + 1);
-        } else {
-            return cmd.substring(0, i + 1) + ';';
-        }
+    private String addCommandSemicolonIfNeeded(final String cmd) {
+        final String tmp = cmd.trim();
+        return (tmp.endsWith(";") || tmp.endsWith("$")) ? tmp : tmp + ';';
     }
 
     private void notifyUser(final String msg) {

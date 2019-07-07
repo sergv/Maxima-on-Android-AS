@@ -17,8 +17,6 @@
  */
 package jp.yhonda;
 
-import android.util.Log;
-
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -35,7 +33,16 @@ public class CommandExec {
 	private final InputStream is;
 	private final long pid;
 
-	public CommandExec (final List<String> commandList) throws IOException {
+	public static CommandExec execute(final List<String> commandList) throws IOException {
+		return new CommandExec(commandList);
+	}
+
+	public static int executeAndWait(final List<String> commandList) throws IOException, InterruptedException {
+		CommandExec cmd = new CommandExec(commandList);
+		return cmd.proc.waitFor();
+	}
+
+	private CommandExec(final List<String> commandList) throws IOException {
 		procBuilder = new ProcessBuilder(commandList);
 		// process starts
 		proc = procBuilder.start();

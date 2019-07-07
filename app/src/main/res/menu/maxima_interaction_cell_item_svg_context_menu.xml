@@ -7,19 +7,9 @@
         android:title="Reuse input" />
 
     <item
-        android:id="@+id/maxima_context_menu_reuse_output"
-        android:titleCondensed="Reuse output"
-        android:title="Reuse output" />
-
-    <item
         android:id="@+id/maxima_context_menu_copy_input"
         android:titleCondensed="Copy input"
         android:title="Copy input" />
-
-    <item
-        android:id="@+id/maxima_context_menu_copy_output"
-        android:titleCondensed="Copy output"
-        android:title="Copy output" />
 
     <item
         android:id="@+id/maxima_context_menu_explore_graph"

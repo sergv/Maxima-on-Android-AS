@@ -306,7 +306,7 @@ public class MaximaActivity extends AppCompatActivity {
         }
 
         final MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.maxima_interaction_cell_item_context_menu, menu);
+        inflater.inflate(R.menu.maxima_interaction_cell_item_svg_context_menu, menu);
 
         switch (cell.outputType) {
             case OutputText:
