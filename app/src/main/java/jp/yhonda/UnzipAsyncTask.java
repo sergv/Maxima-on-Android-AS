@@ -123,12 +123,10 @@ public final class UnzipAsyncTask extends AsyncTask<Integer, Integer, Integer> {
 				}
 			}
 		} catch (IOException e) {
-			Log.d("MoA", "exception12");
 			e.printStackTrace();
 			try {
 				fos.close();
 			} catch (IOException e1) {
-				Log.d("MoA", "exception13");
 				e1.printStackTrace();
 				return (-1);
 			}

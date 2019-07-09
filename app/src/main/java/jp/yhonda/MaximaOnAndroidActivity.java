@@ -73,8 +73,6 @@ import junit.framework.Assert;
 
 public class MaximaOnAndroidActivity extends AppCompatActivity {
 
-	private static final String TAG = "MoA";
-
 	private static final String AUTO_COMPLETION_CHECK_BOX_PREF = "auto completion check enabled";
 	public static final String MAIN_SCALE_PREF = "main scale";
 	public static final String BROWSER_TEXT_SIZE_PREF = "browser font size";
@@ -126,7 +124,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
-		Log.d("MoA", "onCreate()");
+		LogUtils.d("onCreate()");
 		super.onCreate(savedInstanceState);
 
 		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
@@ -148,10 +146,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		webview.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(final WebView view, final String url) {
-				Log.d("MoA", "onPageFinished");
+				LogUtils.d("onPageFinished");
 				final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(thisActivity);
 				final float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
-				Log.d("MoA", "onPageFinished: scale = " + Float.toString(sc));
+				LogUtils.d("onPageFinished: scale = " + Float.toString(sc));
 				view.setInitialScale((int) (100 * sc));
 				signalJavascriptInitialised();
 			}
@@ -159,7 +157,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		});
 		final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
-		Log.d("MoA", "onCreate scale =" + Float.toString(sc));
+		LogUtils.d("onCreate scale =" + Float.toString(sc));
 		webview.setInitialScale((int) (100 * sc));
 
 		webview.getSettings().setBuiltInZoomControls(true);
@@ -170,7 +168,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		webview.setWebChromeClient(new WebChromeClient() {
 			@Override
 			public boolean onConsoleMessage(final ConsoleMessage cm) {
-				Log.d(TAG, cm.sourceId() + ":" + cm.lineNumber() + ":" + cm.message());
+				LogUtils.d(cm.sourceId() + ":" + cm.lineNumber() + ":" + cm.message());
 				return true;
 			}
 		});
@@ -214,10 +212,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		// 	@Override
 		// 	public boolean onTouch(final View view, final MotionEvent event) {
 		// 		if ((view == webview) && (event.getAction() == MotionEvent.ACTION_UP)) {
-		// 			Log.d("MoA", "onTouch on webview");
+		// 			LogUtils.d("onTouch on webview");
 		// 			@SuppressWarnings("deprecation")
 		// 			float sc = webview.getScale();
-		// 			Log.d("MoA", "sc=" + Float.toString(sc));
+		// 			LogUtils.d("sc=" + Float.toString(sc));
 		// 			final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		// 			final Editor editor = settings.edit();
 		// 			editor.putFloat(MAIN_SCALE_PREF, sc);
@@ -265,10 +263,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 	@Override
 	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-		Log.d("MoA", "onActivityResult()");
+		LogUtils.d("onActivityResult()");
 		// super.onActivityResult(requestCode, resultCode, data);
 		final String sender = data != null ? data.getStringExtra("sender") : "anon";
-		Log.d("MoA", "sender = " + sender);
+		LogUtils.d("sender = " + sender);
         if (sender == null && requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             //User has selected a script file to load.
             final Uri uri = data.getData();
@@ -313,7 +311,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 	@Override
 	protected void onResume() {
-		Log.d("MoA","onResume");
+		LogUtils.d("onResume");
 		super.onResume();
 		final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
 		final AppGlobals globals = AppGlobals.getSingleton();
@@ -358,7 +356,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	}
 
     private void startMaximaProcess() {
-        Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess: started");
+        LogUtils.d("MaximaOnAndroidActivity.startMaximaProcess: started");
 
         if (!(FileUtils.exists(internalDir + "/maxima-" + mvers.versionString())) &&
                 !(FileUtils.exists(externalDir + "/maxima-" + mvers.versionString()))) {
@@ -369,7 +367,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess: load maximaURL " + maximaURL);
+				LogUtils.d("MaximaOnAndroidActivity.startMaximaProcess: load maximaURL " + maximaURL);
 				webview.loadUrl(maximaURL);
 			}
 		});
@@ -383,24 +381,24 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
             @Override
             public void onServiceConnected(final ComponentName componentName, final IBinder binder) {
-                Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess.onServiceConnected: started");
+                LogUtils.d("MaximaOnAndroidActivity.startMaximaProcess.onServiceConnected: started");
                 serviceBinder = (MaximaService.MaximaBinder) binder;
 
                 restoreHistory(serviceBinder.getInteractionHistory());
 
                 signalBinderInitialised();
-                Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess.onServiceConnected: done");
+                LogUtils.d("MaximaOnAndroidActivity.startMaximaProcess.onServiceConnected: done");
             }
 
             @Override
             public void onServiceDisconnected(final ComponentName componentName) {
                 serviceBinder = null;
-                Log.d(TAG, "Service disconnected for no apparent reason");
+                LogUtils.d("Service disconnected for no apparent reason");
                 Toast.makeText(cxt, "Maxima service disconnected for no reason!", Toast.LENGTH_LONG).show();
             }
         };
         bindService(intent, conn, BIND_AUTO_CREATE);
-        Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess: done");
+        LogUtils.d("MaximaOnAndroidActivity.startMaximaProcess: done");
     }
 
     private void restoreHistory(final MaximaService.InteractionHistory history) {
@@ -419,7 +417,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
     }
 
 	private void copyExample(final String mcmd) {
-		Log.d("MoA", "copyExample()");
+		LogUtils.d("copyExample()");
 		String[] mcmd2 = mcmd.split("\n\\(%");
 		mcmd2[0] = mcmd2[0].replaceFirst("^\\(%", "");
 		for (int i = 0; i < mcmd2.length; i++) {
@@ -458,7 +456,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		if (mcmdArray == null) {
 			return;
         }
-		Log.d("MoA", "copyExampleInputToInputArea()");
+		LogUtils.d("copyExampleInputToInputArea()");
 		inputArea.setText(mcmdArray[mcmdArrayIndex]);
 		inputArea.setSelection(mcmdArray[mcmdArrayIndex].length());
 		inputArea.requestFocus();
@@ -566,7 +564,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						final String removeCellUrl = "javascript:window.RemoveCell(" + cell.identifier + ")";
-						Log.d(TAG, "removeCellUrl: " + removeCellUrl);
+						LogUtils.d("removeCellUrl: " + removeCellUrl);
 						webview.loadUrl(removeCellUrl);
 					}
 				});
@@ -597,19 +595,19 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 	@JavascriptInterface
 	public void onTouchInput(final int identifier) {
-        Log.d(TAG, "MaximaOnAndroidActivity.onTouchInput: identifier = " + identifier);
+        LogUtils.d("MaximaOnAndroidActivity.onTouchInput: identifier = " + identifier);
 		showMenuForCell(identifier);
 	}
 
 	@JavascriptInterface
 	public void onTouchOutput(final int identifier) {
-        Log.d(TAG, "MaximaOnAndroidActivity.onTouchOutput: identifier = " + identifier);
+        LogUtils.d("MaximaOnAndroidActivity.onTouchOutput: identifier = " + identifier);
 		showMenuForCell(identifier);
 	}
 
 	@JavascriptInterface
 	public void onTouchInlineGraph(final int identifier) {
-        Log.d(TAG, "MaximaOnAndroidActivity.onTouchInlineGraph: identifier = " + identifier);
+        LogUtils.d("MaximaOnAndroidActivity.onTouchInlineGraph: identifier = " + identifier);
 
 		if (!ensureBinderInitialised()) {
 			return;
@@ -630,7 +628,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						scview.fullScroll(ScrollView.FOCUS_DOWN);
-						Log.d("MoA", "scroll!");
+						LogUtils.d("scroll!");
 					}
 				};
 				scview.post(viewtask);
@@ -685,7 +683,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 			case OutputText: {
 
 				final String resString = result.output;
-				Log.d(TAG, "displayMaximaCmdResults: " + resString);
+				LogUtils.d("displayMaximaCmdResults: " + resString);
 				final String[] resArray = resString.split("\\$\\$\\$\\$\\$\\$");
 				final ArrayList<String> escapedResults = new ArrayList<>();
 				for (int i = 0; i < resArray.length; i++) {
@@ -712,12 +710,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + result.input) + "')";
-						Log.d(TAG, "updateInputUrl: " + updateInputUrl);
+						LogUtils.d("updateInputUrl: " + updateInputUrl);
 						webview.loadUrl(updateInputUrl);
 
 						for (final String str : escapedResults) {
 							Assert.assertNotNull(str);
-							Log.d(TAG, "update result url: " + str);
+							LogUtils.d("update result url: " + str);
 							webview.loadUrl(str);
 						}
 					}
@@ -735,7 +733,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + result.input) + "')";
-						Log.d(TAG, "updateInputUrl: " + updateInputUrl);
+						LogUtils.d("updateInputUrl: " + updateInputUrl);
 						webview.loadUrl(updateInputUrl);
 
 						final String updateOutputGraphUrl = "javascript:window.UpdateOutputGraph(" + result.identifier + ", '" + escapeChars(svg) + "')";
@@ -827,8 +825,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	}
 
 	private void showGraph(final String path) {
-		Log.d("MoA", "showGraph: started");
-		Log.d("MoA", "showGraph: graph file " + path + " exists: " + FileUtils.exists(path));
+		LogUtils.d("showGraph: started");
+		LogUtils.d("showGraph: graph file " + path + " exists: " + FileUtils.exists(path));
 		if (FileUtils.exists(path)) {
             final Intent intent = new Intent(this, GnuplotGraphActivity.class);
             intent.setAction(Intent.ACTION_VIEW);
@@ -840,7 +838,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	}
 
     private void showInlineGraph(final String svg) {
-        Log.d(TAG, "showInlineGraph: started");
+        LogUtils.d("showInlineGraph: started");
         final Intent intent = new Intent(this, GnuplotGraphActivity.class);
         intent.setAction(Intent.ACTION_VIEW);
         intent.putExtra("graph-inline", svg);
@@ -1008,7 +1006,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
             binderInitialised.await();
 			return true;
         } catch (InterruptedException e) {
-            Log.d(TAG, "Failed to await for binder initialisation" + e);
+            LogUtils.d("Failed to await for binder initialisation" + e);
             Toast.makeText(this, "Failed to wait for maxima service", Toast.LENGTH_LONG).show();
             return false;
         }
@@ -1023,7 +1021,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
             javascriptAvailable.await();
             return true;
         } catch (InterruptedException e) {
-            Log.d(TAG, "Failed to await for javascript initialisation" + e);
+            LogUtils.d("Failed to await for javascript initialisation" + e);
             Toast.makeText(this, "Failed to wait for page loading by the web view", Toast.LENGTH_LONG).show();
             return false;
         }

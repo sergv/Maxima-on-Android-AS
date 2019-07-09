@@ -39,9 +39,6 @@ public class MaximaService extends Service {
     private static final String QUEPCAD_INPUT    = APP_DATA_TMP_DIR + "/qepcad_input.txt";
 
 
-    private static final String TAG = "MoA";
-
-
     private CountDownLatch maximaStartedEvent = new CountDownLatch(1);
 
     private CommandExec maximaProccess;
@@ -112,7 +109,7 @@ public class MaximaService extends Service {
 
     @Override
     public int onStartCommand(final Intent intent, final int flags, final int startId) {
-        Log.d(TAG, "MaximaService.onStartCommand: started");
+        LogUtils.d("MaximaService.onStartCommand: started");
         super.onStartCommand(intent, flags, startId);
 
         if (maximaProccess == null) {
@@ -152,7 +149,7 @@ public class MaximaService extends Service {
         try {
             maximaStartedEvent.await();
         } catch (InterruptedException e) {
-            Log.d(TAG, "onBind: failed to wait for maxima start event: " + e);
+            LogUtils.d("onBind: failed to wait for maxima start event: " + e);
             return null;
         }
 
@@ -160,7 +157,7 @@ public class MaximaService extends Service {
     }
 
     private void startMaximaProcess() {
-        Log.d(TAG, "MaximaService.startMaximaProcess: started");
+        LogUtils.d("MaximaService.startMaximaProcess: started");
 
         CpuArchitecture.initCpuArchitecture();
 
@@ -173,22 +170,22 @@ public class MaximaService extends Service {
             for (String part : maximaCmd) {
                 cmdStr = cmdStr + " " + part;
             }
-            Log.d(TAG, "MaximaService.startMaximaProcess: executing command" + cmdStr);
+            LogUtils.d("MaximaService.startMaximaProcess: executing command" + cmdStr);
             maximaProccess = CommandExec.execute(maximaCmd);
         } catch (IOException e) {
-            Log.d(TAG, "Exception while initialising maxima process: " + e);
+            LogUtils.d("Exception while initialising maxima process: " + e);
             exitMOA();
         }
         maximaProccess.clearOutputBuffer();
         maximaStartedEvent.countDown();
-        Log.d(TAG, "MaximaService.startMaximaProcess: done");
+        LogUtils.d("MaximaService.startMaximaProcess: done");
     }
 
     private void exitMOA() {
         try {
             maximaProccess.sendMaximaInput("quit();\n");
         } catch (Exception e) {
-            Log.d(TAG, "Failed to send  quit() to Maxima: " + e);
+            LogUtils.d("Failed to send  quit() to Maxima: " + e);
             e.printStackTrace();
         }
         stopSelf();
@@ -219,7 +216,7 @@ public class MaximaService extends Service {
         try {
             maximaStartedEvent.await();
         } catch (InterruptedException e) {
-            Log.d(TAG, "ensureMaximaStarted: failed to wait for maxima start event: " + e);
+            LogUtils.d("ensureMaximaStarted: failed to wait for maxima start event: " + e);
         }
     }
 
@@ -230,14 +227,14 @@ public class MaximaService extends Service {
         prepareTmpDir();
 
         try {
-            Log.d(TAG, "Sending command " + command);
+            LogUtils.d("Sending command " + command);
             maximaProccess.sendMaximaInput(command + "\n");
         } catch (IOException e) {
-            Log.d(TAG, "Maxima threw IOException: " + e);
+            LogUtils.d("Maxima threw IOException: " + e);
             e.printStackTrace();
             exitMOA();
         } catch (Exception e) {
-            Log.d(TAG, "Maxima threw some other Exception: " + e);
+            LogUtils.d("Maxima threw some other Exception: " + e);
             e.printStackTrace();
             exitMOA();
         }
@@ -260,13 +257,13 @@ public class MaximaService extends Service {
                     try {
                         CommandExec.executeAndWait(qepcadCmd);
                     } catch (Exception e) {
-                        Log.d(TAG, "Exception while executing qepcad: " + e);
+                        LogUtils.d("Exception while executing qepcad: " + e);
                         notifyUser("Failed to execute qepcad:\n" + e);
                     }
                     try {
                         maximaProccess.sendMaximaInput("qepcad finished\n");
                     } catch (IOException e) {
-                        Log.d(TAG, "Exception when reporting to maxima that qepcad finished: " + e);
+                        LogUtils.d("Exception when reporting to maxima that qepcad finished: " + e);
                     }
                     maxOut = maximaProccess.getMaximaOutput();
                     p = isStartQepcadString(maxOut);
@@ -277,9 +274,9 @@ public class MaximaService extends Service {
                 maximaResult = maxOut;
             }
         }
-        Log.d(TAG, "Got result: " + maximaResult);
+        LogUtils.d("Got result: " + maximaResult);
 
-        Log.d(TAG, "processCommand: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
+        LogUtils.d("processCommand: file " + gnuplotInputFile() + " exists: " + FileUtils.exists(gnuplotInputFile()));
         if (FileUtils.exists(gnuplotInputFile())) {
             final List<String> gnuplotCmd = new ArrayList<String>();
             final String gnuplotExe =
@@ -288,10 +285,10 @@ public class MaximaService extends Service {
             gnuplotCmd.add(gnuplotExe);
             gnuplotCmd.add(gnuplotInputFile());
             try {
-                Log.d(TAG, "processCommand: starting gnuplot command " + gnuplotCmd);
+                LogUtils.d("processCommand: starting gnuplot command " + gnuplotCmd);
                 CommandExec.executeAndWait(gnuplotCmd);
             } catch (Exception e) {
-                Log.d(TAG, "processCommand: failed to execute gnuplot: " + e);
+                LogUtils.d("processCommand: failed to execute gnuplot: " + e);
                 notifyUser("Failed to execute gnuplot:\n" + e);
             }
             final File gnuplotOut = new File(GNUPLOT_OUT);
@@ -300,7 +297,7 @@ public class MaximaService extends Service {
                 try {
                     maximaResult = FileUtils.readFile(gnuplotOut);
                 } catch (IOException e) {
-                    Log.d(TAG, "processCommand: gnuplot graph does not exist: " + e);
+                    LogUtils.d("processCommand: gnuplot graph does not exist: " + e);
                     notifyUser("Fatal error: gnuplot graph existed a moment ago but now doesn't");
                 }
             }
@@ -315,7 +312,7 @@ public class MaximaService extends Service {
             // Strip prompts
             for (final String line : lines) {
                 final String line2 = line.trim();
-                Log.d(TAG, "line2: " + line2);
+                LogUtils.d("line2: " + line2);
                 if (line2.startsWith("[[[[") && line2.endsWith("]]]]")) {
                     outputLabel = line2.substring(4, line2.length() - 4);
                 } else if (line2.startsWith("(%i") && line2.endsWith(")")) {
@@ -327,8 +324,8 @@ public class MaximaService extends Service {
 
             cleanedResult = joinLines(filtered); //.replace("\\\\", "\\");
         }
-        Log.d(TAG, "Output label: '" + outputLabel + "'");
-        // Log.d(TAG, "Cleaned result: " + cleanedResult);
+        LogUtils.d("Output label: '" + outputLabel + "'");
+        // LogUtils.d("Cleaned result: " + cleanedResult);
 
         return interactionHistory.addCell(commandRaw, cleanedResult, maximaOutType, false, outputLabel);
     }
@@ -381,14 +378,14 @@ public class MaximaService extends Service {
 
         final String command = ":lisp ($printf nil \"~A\" " + outputLabel + ")";
         try {
-            Log.d(TAG, "getMaximaOutput: sending command: " + command);
+            LogUtils.d("getMaximaOutput: sending command: " + command);
             maximaProccess.sendMaximaInput(command + "\n");
         } catch (IOException e) {
-            Log.d(TAG, "Maxima threw IOException: " + e);
+            LogUtils.d("Maxima threw IOException: " + e);
             e.printStackTrace();
             exitMOA();
         } catch (Exception e) {
-            Log.d(TAG, "Maxima threw some other Exception: " + e);
+            LogUtils.d("Maxima threw some other Exception: " + e);
             e.printStackTrace();
             exitMOA();
         }
@@ -400,7 +397,7 @@ public class MaximaService extends Service {
                     stripPromptLine(
                         Arrays.asList(
                             rawOut.replace("\\'", "'").split("\n")))));
-        Log.d(TAG, "getMaximaOutput: got: " + output);
+        LogUtils.d("getMaximaOutput: got: " + output);
         return output;
     }
 

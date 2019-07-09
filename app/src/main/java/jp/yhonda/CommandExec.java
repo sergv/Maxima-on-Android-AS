@@ -62,7 +62,7 @@ public class CommandExec {
 		// 			break;
 		// 		default:
 		// 			outputBuffer.append((char) c);
-		// 			Log.d(TAG, "buf = " + outputBuffer);
+		// 			LogUtils.d(TAG, "buf = " + outputBuffer);
 		// 			break;
 		// 	}
 		// }
@@ -77,7 +77,7 @@ public class CommandExec {
 					return;
 				default:
 					outputBuffer.append((char) c);
-					// Log.d(TAG, "buf = " + outputBuffer);
+					// LogUtils.d(TAG, "buf = " + outputBuffer);
 					break;
 			}
 		}

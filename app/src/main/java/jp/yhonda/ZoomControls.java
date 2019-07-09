@@ -104,7 +104,7 @@ public class ZoomControls implements View.OnTouchListener {
 		final int action = event.getActionMasked();
 		boolean ret = false;
 
-		//Log.d("MoA", "onTouch: event.getPointerCount() = " + event.getPointerCount());
+		//LogUtils.d("MoA", "onTouch: event.getPointerCount() = " + event.getPointerCount());
 		switch (event.getPointerCount()) {
 		case 1:
 			switch (action) {
@@ -120,7 +120,7 @@ public class ZoomControls implements View.OnTouchListener {
 					if (idx1 == -1) {
 						return false;
 					}
-					//Log.d("MoA", "onTouch: 1/MotionEvent.ACTION_DOWN");
+					//LogUtils.d("MoA", "onTouch: 1/MotionEvent.ACTION_DOWN");
 					intermedX = startX = event.getX(idx1);
 					intermedY = startY = event.getY(idx1);
 				}
@@ -136,7 +136,7 @@ public class ZoomControls implements View.OnTouchListener {
 				if (idx1 == -1) {
 					return false;
 				}
-				//Log.d("MoA", "onTouch: 1/MotionEvent.ACTION_MOVE");
+				//LogUtils.d("MoA", "onTouch: 1/MotionEvent.ACTION_MOVE");
 				intermedX = event.getX(idx1);
 				intermedY = event.getY(idx1);
 				final double dx = intermedX - startX;
@@ -157,7 +157,7 @@ public class ZoomControls implements View.OnTouchListener {
 				if (idx1 == -1) {
 					return false;
 				}
-				//Log.d("MoA", "onTouch: 1/MotionEvent.ACTION_UP");
+				//LogUtils.d("MoA", "onTouch: 1/MotionEvent.ACTION_UP");
 				intermedX = event.getX(idx1);
 				intermedY = event.getY(idx1);
 				final double dx = intermedX - startX;
@@ -182,7 +182,7 @@ public class ZoomControls implements View.OnTouchListener {
 				if (idx1 == -1) {
 					return false;
 				}
-				//Log.d("MoA", "onTouch: 2/MotionEvent.ACTION_DOWN");
+				//LogUtils.d("MoA", "onTouch: 2/MotionEvent.ACTION_DOWN");
 				intermedX = event.getX(idx1);
 				intermedY = event.getY(idx1);
 				ret = true;
@@ -193,7 +193,7 @@ public class ZoomControls implements View.OnTouchListener {
 				if (idx2 == -1) {
 					return false;
 				}
-				//Log.d("MoA", "onTouch: 2/MotionEvent.ACTION_POINTER_DOWN");
+				//LogUtils.d("MoA", "onTouch: 2/MotionEvent.ACTION_POINTER_DOWN");
 				finger2 = event.getPointerId(idx2);
 				final float x2 = event.getX(idx2);
 				final float y2 = event.getY(idx2);
@@ -215,7 +215,7 @@ public class ZoomControls implements View.OnTouchListener {
 				if (idx1 == -1 || idx2 == -1) {
 					return false;
 				}
-				Log.d("MoA", "onTouch: 2/MotionEvent.ACTION_*");
+				LogUtils.d("onTouch: 2/MotionEvent.ACTION_*");
 				final float x1 = event.getX(idx1);
 				final float y1 = event.getY(idx1);
 				final float x2 = event.getX(idx2);
@@ -244,19 +244,19 @@ public class ZoomControls implements View.OnTouchListener {
 	}
 
 	private void onDoubleTap() {
-		Log.d("MoA", "onDoubleTap");
+		LogUtils.d("onDoubleTap");
 		imageTransform = initialFullscreenTransform;
 		updateImage();
 	}
 
 	private void onFlingInProgress(final double dx, final double dy) {
-		//Log.d("MoA", "onFlingInProgress: dx = " + dx + ", dy = " + dy);
+		//LogUtils.d("MoA", "onFlingInProgress: dx = " + dx + ", dy = " + dy);
 		intermediateTransform = translationTransform(dx, dy);
 		updateImage();
 	}
 
 	private void onFlingFinished(final double dx, final double dy) {
-		//Log.d("MoA", "onFlingFinished: dx = " + dx + ", dy = " + dy);
+		//LogUtils.d("MoA", "onFlingFinished: dx = " + dx + ", dy = " + dy);
 		imageTransform = mm(imageTransform, intermediateTransform);
 		// imageTransform = mm(imageTransform, translationTransform(dx, dy));
 		intermediateTransform = identityMatrix();
@@ -264,13 +264,13 @@ public class ZoomControls implements View.OnTouchListener {
 	}
 
 	private void onZoomInProgress(final double sx, final double sy) {
-		//Log.d("MoA", "onZoomInProgress: sx = " + sx + ", sy = " + sy);
+		//LogUtils.d("MoA", "onZoomInProgress: sx = " + sx + ", sy = " + sy);
 		intermediateTransform = scaleTransform(sx, sy);
 		updateImage();
 	}
 
 	private void onZoomFinished(final double sx, final double sy) {
-		//Log.d("MoA", "onZoomFinished: sx = " + sx + ", sy = " + sy);
+		//LogUtils.d("MoA", "onZoomFinished: sx = " + sx + ", sy = " + sy);
 		// imageTransform = mm(imageTransform, scaleTransform(sx, sy));
 		imageTransform = mm(imageTransform, intermediateTransform);
 		intermediateTransform = identityMatrix();

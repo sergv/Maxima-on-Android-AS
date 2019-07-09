@@ -136,7 +136,6 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				install(0); // at the UnzipAsyncTask, install(1), install(2) and install(3)
 							// will be called.
 			} else if (view == cancelB) {
-				Log.d("tako", "Cancel pressed.");
 				install(10);
 			}
 
@@ -168,13 +167,13 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				chmod744(internalDir.getAbsolutePath() + "/additions/qepcad/qepcad.sh");
 				CpuArchitecture.initCpuArchitecture();
 				if (CpuArchitecture.getCpuArchitecture() == null) {
-					Log.d("MoA","Install of additions failed.");
+					LogUtils.d("Install of additions failed.");
 					install(10);
 					me.finish();
 				}
 				final String maximaFile = CpuArchitecture.getMaximaExecutableName();
 				if (maximaFile == null) {
-					Log.d("MoA","Install of additions failed.");
+					LogUtils.d("Install of additions failed.");
 					install(10);
 					me.finish();
 				}
@@ -184,7 +183,6 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 						+ installedDir.getAbsolutePath() + "/maxima-" + vers
 						+ "\")\n";
 				copyFileFromAssetsToLocal("init.lisp", initlispPath, firstLine);
-				Log.d("My Test", "Clicked!1.1");
 				final UnzipAsyncTask uzt = new UnzipAsyncTask(this);
 				uzt.setParams(this.getAssets().open(maximaFile + ".zip"),
 						internalDir.getAbsolutePath(), getString(R.string.install_maxima_binary),
@@ -221,11 +219,9 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				break;
 			}
 		} catch (IOException e1) {
-			Log.d("MoA", "exception8");
 			e1.printStackTrace();
 			me.finish();
 		} catch (Exception e) {
-			Log.d("MoA", "exception9");
 			e.printStackTrace();
 			me.finish();
 		}
@@ -254,7 +250,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 			f.setReadable(true,true) &&
 			f.setWritable(true, true);
 		if (!res) {
-			Log.d("MoA","failed to make file executable: " + filename);
+			LogUtils.d("failed to make file executable: " + filename);
 		}
 	}
 

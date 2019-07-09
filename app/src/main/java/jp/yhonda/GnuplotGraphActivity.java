@@ -76,7 +76,7 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 			try {
 				svgContents = FileUtils.readFile(new File(graphFile));
 			} catch (IOException e) {
-				Log.d("MoA", "Failed to read graph file: " + e);
+				LogUtils.d("Failed to read graph file: " + e);
 				Toast.makeText(this, "Failed to read graph file " + graphFile, Toast.LENGTH_LONG).show();
 				return;
 			}
@@ -90,7 +90,7 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 			graphSvgContents = svgContents;
 			zoomControls = new ZoomControls(this, graphView, (int) img.getDocumentWidth(), (int) img.getDocumentHeight());
 		} catch (SVGParseException e) {
-			Log.d("MoA", "Attempting to display invalid svg: " + e);
+			LogUtils.d("Attempting to display invalid svg: " + e);
 			Toast.makeText(this, "Plot inspector was supplied invalid svg!", Toast.LENGTH_LONG).show();
 		}
 	}
@@ -154,7 +154,7 @@ public class GnuplotGraphActivity extends AppCompatActivity {
 											FileUtils.writeFile(dest, graphSvgContents);
 											Toast.makeText(act, "Graph " + dest + " saved", Toast.LENGTH_SHORT).show();
 										} catch (IOException e) {
-											Log.d("MoA", "failed to write graph to " + dest + ": " + e);
+											LogUtils.d("failed to write graph to " + dest + ": " + e);
 											Toast.makeText(act, "Failed to copy graph to " + dest.getAbsolutePath(), Toast.LENGTH_LONG).show();
 										}
 										break;

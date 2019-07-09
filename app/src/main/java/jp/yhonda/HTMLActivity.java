@@ -63,9 +63,7 @@ public class HTMLActivity extends AppCompatActivity {
 		webview.addJavascriptInterface(this, "MOA");
 		webview.setWebChromeClient(new WebChromeClient() {
 			public boolean onConsoleMessage(ConsoleMessage cm) {
-				Log.d("MyApplication",
-						cm.message() + " -- From line " + cm.lineNumber()
-								+ " of " + cm.sourceId());
+			    LogUtils.d(cm.message() + " -- From line " + cm.lineNumber() + " of " + cm.sourceId());
 				return true;
 			}
 		});
@@ -84,7 +82,6 @@ public class HTMLActivity extends AppCompatActivity {
 
 	@JavascriptInterface
 	public void setFocus() {
-		Log.d("MoA HTML", "setFocus is called");
 		webview.post(new Runnable () {
 			@Override
 			public void run() {
