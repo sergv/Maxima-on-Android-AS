@@ -39,15 +39,6 @@ public class MaximaService extends Service {
     private static final String QUEPCAD_INPUT    = APP_DATA_TMP_DIR + "/qepcad_input.txt";
 
 
-    private static final String initialHeadline = "Maxima 5.41.0, ECL 16.1.3, MathJax 2.7.5, Gnuplot 5.2.4";
-    private static final String firstMessage =
-            "\n" +
-            "You can touch previous commands for reuse, like input history.\n" +
-            "Long touch alows to reuse either input or output.\n" +
-            "You can touch manual examples to execute them.\n" +
-            "\n" +
-            "Dedicated to the memory of William Schelter.";
-
     private static final String TAG = "MoA";
 
 
@@ -111,12 +102,6 @@ public class MaximaService extends Service {
         super();
 
         interactionHistory = new InteractionHistory();
-        interactionHistory.addCell(
-                initialHeadline,
-                firstMessage,
-                InteractionCell.OutputType.OutputText,
-                true,
-                "");
     }
 
     // NB Client activity should issue startService before binding
