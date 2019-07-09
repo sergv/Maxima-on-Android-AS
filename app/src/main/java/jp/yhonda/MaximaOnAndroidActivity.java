@@ -467,7 +467,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 		final InteractionCell cell = serviceBinder.getInteractionHistory().getCell(identifier);
 
-		final PopupMenu menu = new PopupMenu(this, webview);
+		final PopupMenu menu = new PopupMenu(this, inputArea);
 
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			menu.setGravity(Gravity.CENTER_VERTICAL);
