@@ -109,9 +109,9 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
     private CountDownLatch binderInitialised = new CountDownLatch(1);
     private MaximaService.MaximaBinder serviceBinder;
-
-
+    private ServiceConnection conn;
 	private MultiAutoCompleteTextView inputArea;
+
 	private WebView webview;
 	private ScrollView scview;
 
@@ -347,6 +347,14 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		}
 	}
 
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (conn != null) {
+			unbindService(conn);
+		}
+	}
+
     private void startMaximaProcess() {
         Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess: started");
 
@@ -367,7 +375,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
         startService(intent);
 
         final Context cxt = this;
-        final ServiceConnection conn = new ServiceConnection() {
+        conn = new ServiceConnection() {
 
             @Override
             public void onServiceConnected(final ComponentName componentName, final IBinder binder) {
