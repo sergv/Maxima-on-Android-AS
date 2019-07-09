@@ -424,18 +424,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 				mcmdArray[j] = mcmd2[i].substring(a + 1);
 				a = mcmdArray[j].lastIndexOf(";");
 				if (a > 0) {
-					mcmdArray[j] = mcmdArray[j].substring(0, a + 1); /*
-																	 * to
-																	 * include ;
-																	 */
+					mcmdArray[j] = mcmdArray[j].substring(0, a + 1); // to include ;
 				} else {
 					a = mcmdArray[j].lastIndexOf("$");
 					if (a > 0) {
-						mcmdArray[j] = mcmdArray[j].substring(0, a + 1); /*
-																		 * to
-																		 * include
-																		 * $
-																		 */
+						mcmdArray[j] = mcmdArray[j].substring(0, a + 1); // to include $
 					}
 				}
 				j++;
