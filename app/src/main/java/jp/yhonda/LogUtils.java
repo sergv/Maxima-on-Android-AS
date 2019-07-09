@@ -7,7 +7,7 @@ public class LogUtils {
     private static final String TAG = "MoA";
 
     static void d(final String msg) {
-        Log.d(TAG, msg);
+        // Log.d(TAG, msg);
     }
 
 }
