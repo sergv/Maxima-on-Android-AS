@@ -136,7 +136,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				install(0); // at the UnzipAsyncTask, install(1), install(2) and install(3)
 							// will be called.
 			} else if (view == cancelB) {
-				Log.v("tako", "Cancel pressed.");
+				Log.d("tako", "Cancel pressed.");
 				install(10);
 			}
 
@@ -168,13 +168,13 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 				chmod744(internalDir.getAbsolutePath() + "/additions/qepcad/qepcad.sh");
 				CpuArchitecture.initCpuArchitecture();
 				if (CpuArchitecture.getCpuArchitecture() == null) {
-					Log.v("MoA","Install of additions failed.");
+					Log.d("MoA","Install of additions failed.");
 					install(10);
 					me.finish();
 				}
 				final String maximaFile = CpuArchitecture.getMaximaExecutableName();
 				if (maximaFile == null) {
-					Log.v("MoA","Install of additions failed.");
+					Log.d("MoA","Install of additions failed.");
 					install(10);
 					me.finish();
 				}
@@ -254,7 +254,7 @@ public final class MOAInstallerActivity extends AppCompatActivity {
 			f.setReadable(true,true) &&
 			f.setWritable(true, true);
 		if (!res) {
-			Log.v("MoA","failed to make file executable: " + filename);
+			Log.d("MoA","failed to make file executable: " + filename);
 		}
 	}
 

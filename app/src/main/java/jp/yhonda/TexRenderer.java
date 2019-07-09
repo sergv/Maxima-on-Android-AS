@@ -74,7 +74,7 @@ public class TexRenderer {
     public void renderTex(final String tex, final CallbackWithFailure<String, String> k) {
         resultConsumer = k;
         try {
-            Log.v(TAG, "renderTex");
+            Log.d(TAG, "renderTex");
             formulaRenderSem.acquire();
         } catch (InterruptedException e) {
             Log.d(TAG, "failed to acquire semaphore: " + e);

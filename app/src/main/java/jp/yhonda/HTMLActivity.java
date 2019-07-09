@@ -84,7 +84,7 @@ public class HTMLActivity extends AppCompatActivity {
 
 	@JavascriptInterface
 	public void setFocus() {
-		Log.v("MoA HTML", "setFocus is called");
+		Log.d("MoA HTML", "setFocus is called");
 		webview.post(new Runnable () {
 			@Override
 			public void run() {

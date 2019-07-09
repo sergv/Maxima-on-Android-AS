@@ -53,7 +53,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.v("MoAMan", "onCreate");
+		Log.d("MoAMan", "onCreate");
 		thisActivity = this;
 		setContentView(R.layout.htmlactivity);
 		webview = (WebView) findViewById(R.id.webViewInHTMLActivity);
@@ -67,11 +67,11 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 
 		webview.setWebViewClient(new WebViewClient() {
 			public void onPageFinished(WebView view, String url) {
-				Log.v("MoAMan", "onPageFinished");
+				Log.d("MoAMan", "onPageFinished");
 				SharedPreferences settings = PreferenceManager
 						.getDefaultSharedPreferences(thisActivity);
 				float sc = settings.getFloat("man scale", 1.0f);
-				Log.v("MoAMan", "sc=" + Float.toString(sc));
+				Log.d("MoAMan", "sc=" + Float.toString(sc));
 				view.setInitialScale((int) (100 * sc));
 				webview.postDelayed(new Runnable() {
 					@Override
@@ -79,7 +79,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 						webview.loadUrl("javascript:var bd=document.getElementsByTagName('body')[0];"
 								+ "bd.style.marginLeft='5px';bd.style.width=(window.innerWidth*0.92)+'px';"
 								+ "console.log('innerWidth='+window.innerWidth);");
-						Log.v("MoAMan", "onScaleChanged called.");
+						Log.d("MoAMan", "onScaleChanged called.");
 					}
 				}, 100);
 
@@ -93,7 +93,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 					@Override
 					public void run() {
 						webView.loadUrl("javascript:document.getElementsByTagName('body')[0].style.width=(window.innerWidth*0.95)+'px';console.log('innerWidth='+window.innerWidth);");
-						Log.v("MoAMan", "onScaleChanged called.");
+						Log.d("MoAMan", "onScaleChanged called.");
 					}
 				}, 100);
 			}
@@ -102,7 +102,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 				.getDefaultSharedPreferences(this);
 		float sc = settings.getFloat("man scale", 1.0f);
 		webview.setInitialScale((int) (100 * sc));
-		Log.v("MoAMan", "onCreate sc=" + Float.toString(sc));
+		Log.d("MoAMan", "onCreate sc=" + Float.toString(sc));
 
 		webview.setOnTouchListener(this);
 
@@ -211,24 +211,24 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 	@Override
 	protected void onStart() {
 		super.onStart();
-		Log.v("MoAMan", "onStart");
+		Log.d("MoAMan", "onStart");
 	}
 
 	@Override
 	protected void onRestart() {
 		super.onRestart();
-		Log.v("MoAMan", "onRestart");
+		Log.d("MoAMan", "onRestart");
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		Log.v("MoAMan", "onResume");
+		Log.d("MoAMan", "onResume");
 	}
 
 	@Override
 	protected void onPause() {
-		Log.v("MoAMan", "onPause");
+		Log.d("MoAMan", "onPause");
 		Bundle outState = new Bundle();
 		webview.saveState(outState);
 		Parcel parcel = Parcel.obtain();
@@ -241,7 +241,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 
 			serialized = Base64.encodeToString(bos.toByteArray(), 0);
 		} catch (IOException e) {
-			Log.e(getClass().getSimpleName(), e.toString(), e);
+			Log.d(getClass().getSimpleName(), e.toString(), e);
 		} finally {
 			parcel.recycle();
 		}
@@ -258,17 +258,17 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 	@Override
 	protected void onStop() {
 		super.onStop();
-		Log.v("MoAMan", "onStop");
+		Log.d("MoAMan", "onStop");
 	}
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		Log.v("MoAMan", "onDestroy");
+		Log.d("MoAMan", "onDestroy");
 	}
 
 	public void copyExampleCallback(final String maximacmd) {
-		Log.v("MoAMan", "copyExampleCallback()");
+		Log.d("MoAMan", "copyExampleCallback()");
 		if (!maximacmd.startsWith("(%i")) {
 			final String msg = "This is not an execution script example.";
 			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
@@ -292,17 +292,17 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 			}
 		};
 		handle.postDelayed(af, 500);
-		Log.v("MoAMan", "end of copyExampleCallback()");
+		Log.d("MoAMan", "end of copyExampleCallback()");
 
 	}
 
 	@Override
 	public boolean onTouch(View arg0, MotionEvent arg1) {
 		if ((arg0 == webview) && (arg1.getAction() == MotionEvent.ACTION_UP)) {
-			Log.v("MoA Man", "onTouch on webview");
+			Log.d("MoA Man", "onTouch on webview");
 			@SuppressWarnings("deprecation")
 			float sc = webview.getScale();
-			Log.v("MoAMan", "sc=" + Float.toString(sc));
+			Log.d("MoAMan", "sc=" + Float.toString(sc));
 			SharedPreferences settings = PreferenceManager
 					.getDefaultSharedPreferences(this);
 			Editor editor = settings.edit();

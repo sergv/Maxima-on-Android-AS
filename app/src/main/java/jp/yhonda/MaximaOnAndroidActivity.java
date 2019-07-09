@@ -148,10 +148,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		webview.setWebViewClient(new WebViewClient() {
 			@Override
 			public void onPageFinished(final WebView view, final String url) {
-				Log.v("MoA", "onPageFinished");
+				Log.d("MoA", "onPageFinished");
 				final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(thisActivity);
 				final float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
-				Log.v("MoA", "onPageFinished: scale = " + Float.toString(sc));
+				Log.d("MoA", "onPageFinished: scale = " + Float.toString(sc));
 				view.setInitialScale((int) (100 * sc));
 				signalJavascriptInitialised();
 			}
@@ -159,7 +159,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		});
 		final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
-		Log.v("MoA", "onCreate scale =" + Float.toString(sc));
+		Log.d("MoA", "onCreate scale =" + Float.toString(sc));
 		webview.setInitialScale((int) (100 * sc));
 
 		webview.getSettings().setBuiltInZoomControls(true);
@@ -214,10 +214,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		// 	@Override
 		// 	public boolean onTouch(final View view, final MotionEvent event) {
 		// 		if ((view == webview) && (event.getAction() == MotionEvent.ACTION_UP)) {
-		// 			Log.v("MoA", "onTouch on webview");
+		// 			Log.d("MoA", "onTouch on webview");
 		// 			@SuppressWarnings("deprecation")
 		// 			float sc = webview.getScale();
-		// 			Log.v("MoA", "sc=" + Float.toString(sc));
+		// 			Log.d("MoA", "sc=" + Float.toString(sc));
 		// 			final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 		// 			final Editor editor = settings.edit();
 		// 			editor.putFloat(MAIN_SCALE_PREF, sc);
@@ -265,10 +265,10 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 	@Override
 	protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-		Log.v("MoA", "onActivityResult()");
+		Log.d("MoA", "onActivityResult()");
 		// super.onActivityResult(requestCode, resultCode, data);
 		final String sender = data != null ? data.getStringExtra("sender") : "anon";
-		Log.v("MoA", "sender = " + sender);
+		Log.d("MoA", "sender = " + sender);
         if (sender == null && requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             //User has selected a script file to load.
             final Uri uri = data.getData();
@@ -566,7 +566,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						final String removeCellUrl = "javascript:window.RemoveCell(" + cell.identifier + ")";
-						Log.v(TAG, "removeCellUrl: " + removeCellUrl);
+						Log.d(TAG, "removeCellUrl: " + removeCellUrl);
 						webview.loadUrl(removeCellUrl);
 					}
 				});
@@ -630,7 +630,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						scview.fullScroll(ScrollView.FOCUS_DOWN);
-						Log.v("MoA", "scroll!");
+						Log.d("MoA", "scroll!");
 					}
 				};
 				scview.post(viewtask);
@@ -685,7 +685,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 			case OutputText: {
 
 				final String resString = result.output;
-				Log.v(TAG, "displayMaximaCmdResults: " + resString);
+				Log.d(TAG, "displayMaximaCmdResults: " + resString);
 				final String[] resArray = resString.split("\\$\\$\\$\\$\\$\\$");
 				final ArrayList<String> escapedResults = new ArrayList<>();
 				for (int i = 0; i < resArray.length; i++) {
@@ -712,12 +712,12 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + result.input) + "')";
-						Log.v(TAG, "updateInputUrl: " + updateInputUrl);
+						Log.d(TAG, "updateInputUrl: " + updateInputUrl);
 						webview.loadUrl(updateInputUrl);
 
 						for (final String str : escapedResults) {
 							Assert.assertNotNull(str);
-							Log.v(TAG, "update result url: " + str);
+							Log.d(TAG, "update result url: " + str);
 							webview.loadUrl(str);
 						}
 					}
@@ -735,7 +735,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 					@Override
 					public void run() {
 						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + result.input) + "')";
-						Log.v(TAG, "updateInputUrl: " + updateInputUrl);
+						Log.d(TAG, "updateInputUrl: " + updateInputUrl);
 						webview.loadUrl(updateInputUrl);
 
 						final String updateOutputGraphUrl = "javascript:window.UpdateOutputGraph(" + result.identifier + ", '" + escapeChars(svg) + "')";
