@@ -232,16 +232,10 @@ public class MaximaService extends Service {
 
     private void ensureMaximaStarted() {
         try {
-            Log.v(TAG, "ensureMaximaStarted: started");
-            sem.acquire();
-            Log.v(TAG, "ensureMaximaStarted: semaphore acquired");
-        } catch (final InterruptedException e) {
-            Log.d(TAG, "failed to acquire semaphore");
-            e.printStackTrace();
-            exitMOA();
+            maximaStartedEvent.await();
+        } catch (InterruptedException e) {
+            Log.d(TAG, "ensureMaximaStarted: failed to wait for maxima start event: " + e);
         }
-        sem.release();
-        Log.v(TAG, "ensure maxima started: semaphore released");
     }
 
     private InteractionCell processCommand(final String commandRaw) {
