@@ -106,7 +106,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	private String manURL;
 	private boolean manLangChanged = true;
 	private boolean allExamplesFinished = false;
-	// final Semaphore maximaProcessStartedSem = new Semaphore(1);
 
     private CountDownLatch binderInitialised = new CountDownLatch(1);
     private MaximaService.MaximaBinder serviceBinder;
@@ -116,7 +115,6 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	private WebView webview;
 	private ScrollView scview;
 
-	// private CommandExec maximaProccess;
 	private File internalDir;
 	private File externalDir;
 	private static final MaximaVersion mvers = new MaximaVersion(5, 41, 0);

@@ -41,14 +41,12 @@ public class MaximaService extends Service {
 
     private static final String initialHeadline = "Maxima 5.41.0, ECL 16.1.3, MathJax 2.7.5, Gnuplot 5.2.4";
     private static final String firstMessage =
-            // "Maxima on Android 3.2.1 September 7, 2018\n" +
-            // "\n" +
             "\n" +
-                    "You can touch previous commands for reuse, like input history.\n" +
-                    "Long touch alows to reuse either input or output.\n" +
-                    // "You can touch manual examples to execute them in Maxima.\n" +
-                    "\n" +
-                    "Dedicated to the memory of William Schelter.";
+            "You can touch previous commands for reuse, like input history.\n" +
+            "Long touch alows to reuse either input or output.\n" +
+            "You can touch manual examples to execute them.\n" +
+            "\n" +
+            "Dedicated to the memory of William Schelter.";
 
     private static final String TAG = "MoA";
 
@@ -58,8 +56,6 @@ public class MaximaService extends Service {
     private CommandExec maximaProccess;
     private File internalDir;
     private File externalDir;
-
-    private final Semaphore sem = new Semaphore(1);
 
     private final InteractionHistory interactionHistory;
 
