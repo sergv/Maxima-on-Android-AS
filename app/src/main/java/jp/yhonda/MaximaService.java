@@ -55,6 +55,10 @@ public class MaximaService extends Service {
     public class InteractionHistory {
         private final TreeMap<Integer, InteractionCell> cells = new TreeMap<>();
 
+        public Collection<InteractionCell> allEntries() {
+            return cells.values();
+        }
+
         public int getCount() {
             return cells.size();
         }

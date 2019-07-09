@@ -108,10 +108,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	private boolean allExamplesFinished = false;
 
     private CountDownLatch binderInitialised = new CountDownLatch(1);
+    private CountDownLatch javascriptAvailable = new CountDownLatch(1);
     private MaximaService.MaximaBinder serviceBinder;
     private ServiceConnection conn;
-	private MultiAutoCompleteTextView inputArea;
 
+	private MultiAutoCompleteTextView inputArea;
 	private WebView webview;
 	private ScrollView scview;
 
@@ -152,6 +153,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 				final float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
 				Log.v("MoA", "onPageFinished: scale = " + Float.toString(sc));
 				view.setInitialScale((int) (100 * sc));
+				signalJavascriptInitialised();
 			}
 
 		});
@@ -367,11 +369,13 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess: load maximaURL " + maximaURL);
 				webview.loadUrl(maximaURL);
 			}
 		});
 
         final Intent intent = new Intent(this, MaximaService.class);
+        // Ensure the service will keep running even after current activity is done.
         startService(intent);
 
         final Context cxt = this;
@@ -385,10 +389,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
                 restoreHistory(serviceBinder.getInteractionHistory());
 
                 signalBinderInitialised();
+                Log.d(TAG, "MaximaOnAndroidActivity.startMaximaProcess.onServiceConnected: done");
             }
 
             @Override
-            public void onServiceDisconnected(ComponentName componentName) {
+            public void onServiceDisconnected(final ComponentName componentName) {
                 serviceBinder = null;
                 Log.d(TAG, "Service disconnected for no apparent reason");
                 Toast.makeText(cxt, "Maxima service disconnected for no reason!", Toast.LENGTH_LONG).show();
@@ -399,7 +404,18 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
     }
 
     private void restoreHistory(final MaximaService.InteractionHistory history) {
-        // TODO
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (!ensureJavascriptAvailable()) {
+                    return;
+                }
+
+                for (final InteractionCell cell : history.allEntries()) {
+                    displayMaximaCmdResults(cell);
+                }
+            }
+        }).start();
     }
 
 	private void copyExample(final String mcmd) {
@@ -520,11 +536,11 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
         switch (cell.outputType) {
             case OutputText:
-            	menu.inflate(R.menu.maxima_interaction_cell_item_text_context_menu);
-        		break;
+                menu.inflate(R.menu.maxima_interaction_cell_item_text_context_menu);
+                break;
             case OutputSvg:
-            	menu.inflate(R.menu.maxima_interaction_cell_item_svg_context_menu);
-				break;
+                menu.inflate(R.menu.maxima_interaction_cell_item_svg_context_menu);
+                break;
         }
         runOnUiThread(new Runnable() {
 			@Override
@@ -655,7 +671,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 		final InteractionCell result = serviceBinder.performCommand(commandRaw);
 
-		displayMaximaCmdResults(command, result);
+		displayMaximaCmdResults(result);
 
         // Delete temporary script file:
         if (temporaryScriptFileToCleanUp != null) {
@@ -663,7 +679,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
         }
 	}
 
-	private void displayMaximaCmdResults(final String command, final InteractionCell result) {
+	private void displayMaximaCmdResults(final InteractionCell result) {
+
 		switch (result.outputType) {
 			case OutputText: {
 
@@ -694,7 +711,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + command) + "')";
+						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + result.input) + "')";
 						Log.v(TAG, "updateInputUrl: " + updateInputUrl);
 						webview.loadUrl(updateInputUrl);
 
@@ -717,7 +734,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + command) + "')";
+						final String updateInputUrl = "javascript:window.UpdateInput(" + result.identifier + ", '" + escapeChars("> " + result.input) + "')";
 						Log.v(TAG, "updateInputUrl: " + updateInputUrl);
 						webview.loadUrl(updateInputUrl);
 
@@ -1000,4 +1017,19 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 	private void signalBinderInitialised() {
 		binderInitialised.countDown();
 	}
+
+    private boolean ensureJavascriptAvailable() {
+        try {
+            javascriptAvailable.await();
+            return true;
+        } catch (InterruptedException e) {
+            Log.d(TAG, "Failed to await for javascript initialisation" + e);
+            Toast.makeText(this, "Failed to wait for page loading by the web view", Toast.LENGTH_LONG).show();
+            return false;
+        }
+    }
+
+    private void signalJavascriptInitialised() {
+        javascriptAvailable.countDown();
+    }
 }
