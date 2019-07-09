@@ -166,7 +166,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 				webview.goBack();
 				return true;
 			} else {
-				Intent intent = new Intent(this, MaximaActivity.class);
+				Intent intent = new Intent(this, MaximaOnAndroidActivity.class);
 				setResult(RESULT_OK, intent);
 				intent.putExtra("sender", "manualActivity");
 				finish();
@@ -188,7 +188,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 		boolean retval = false;
 		switch (item.getItemId()) {
 		case R.id.gomaxima:
-			Intent intent = new Intent(this, MaximaActivity.class);
+			Intent intent = new Intent(this, MaximaOnAndroidActivity.class);
 			setResult(RESULT_OK, intent);
 			intent.putExtra("sender", "ManualActivity");
 			finish();
@@ -274,7 +274,7 @@ public class ManualActivity extends AppCompatActivity implements OnTouchListener
 			Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 			return;
 		}
-		final Intent intent = new Intent(this, MaximaActivity.class);
+		final Intent intent = new Intent(this, MaximaOnAndroidActivity.class);
 		setResult(RESULT_OK, intent);
 		intent.putExtra("maxima command", maximacmd);
 		intent.putExtra("sender", "manualActivity");

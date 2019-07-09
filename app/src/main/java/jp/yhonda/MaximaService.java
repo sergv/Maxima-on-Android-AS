@@ -116,7 +116,7 @@ public class MaximaService extends Service {
             internalDir = getFilesDir();
             externalDir = getExternalFilesDir(null);
 
-            final Intent notificationIntent = new Intent(this, MaximaActivity.class);
+            final Intent notificationIntent = new Intent(this, MaximaOnAndroidActivity.class);
             final PendingIntent pendingIntent =
                     PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
