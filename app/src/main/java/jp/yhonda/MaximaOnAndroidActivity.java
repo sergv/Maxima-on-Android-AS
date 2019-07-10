@@ -73,11 +73,6 @@ import junit.framework.Assert;
 
 public class MaximaOnAndroidActivity extends AppCompatActivity {
 
-	private static final String AUTO_COMPLETION_CHECK_BOX_PREF = "auto completion check enabled";
-	public static final String MAIN_SCALE_PREF = "main scale";
-	public static final String BROWSER_TEXT_SIZE_PREF = "browser font size";
-	public static final String INPUT_AREA_TEXT_SIZE_PREF = "input area font size";
-
 	boolean initialised = false; /* expSize initialize is done or not */
 	String[] mcmdArray = null; /* manual example input will be stored. */
 	int mcmdArrayIndex = 0;
@@ -129,7 +124,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 		PreferenceManager.setDefaultValues(this, R.xml.preference, false);
 		final SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-		manURL = pref.getString("manURL", manen);
+		manURL = pref.getString(getString(R.string.maxima_manual_language_pref), manen);
 
 		setContentView(R.layout.main);
 		Util.dimUIWith(findViewById(R.id.maxima_on_android_toplevel));
@@ -148,7 +143,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 			public void onPageFinished(final WebView view, final String url) {
 				LogUtils.d("onPageFinished");
 				final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(thisActivity);
-				final float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
+				final float sc = 1.5f; //settings.getFloat(MAIN_SCALE_PREF, 1.5f);
 				LogUtils.d("onPageFinished: scale = " + Float.toString(sc));
 				view.setInitialScale((int) (100 * sc));
 				signalJavascriptInitialised();
@@ -156,7 +151,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 		});
 		final SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		float sc = settings.getFloat(MAIN_SCALE_PREF, 1.5f);
+		float sc = 1.5f; //settings.getFloat(MAIN_SCALE_PREF, 1.5f);
 		LogUtils.d("onCreate scale =" + Float.toString(sc));
 		webview.setInitialScale((int) (100 * sc));
 
@@ -177,8 +172,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		webview.addJavascriptInterface(this, "MOA");
 
 		inputArea = (MultiAutoCompleteTextView) findViewById(R.id.editText1);
-		inputArea.setTextSize((float) Integer.parseInt(settings.getString(INPUT_AREA_TEXT_SIZE_PREF, "20")));
-		final Boolean isEnableAutoCompletion = settings.getBoolean(AUTO_COMPLETION_CHECK_BOX_PREF, true);
+		inputArea.setTextSize((float) Integer.parseInt(settings.getString(getString(R.string.input_area_font_size_pref), "20")));
+		final Boolean isEnableAutoCompletion = settings.getBoolean(getString(R.string.input_auto_completion_pref), true);
 		inputArea.setThreshold(isEnableAutoCompletion ? 2 : 100);
 		inputArea.setOnEditorActionListener(new TextView.OnEditorActionListener() {
 			@Override
@@ -226,7 +221,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		// 	}
 		// });
 
-		final String newsize = settings.getString(BROWSER_TEXT_SIZE_PREF, "");
+		final String newsize = settings.getString(getString(R.string.browser_font_size_pref), "");
 		if (!newsize.trim().isEmpty()) {
 			runOnUiThread(new Runnable() {
 				@Override
@@ -317,33 +312,33 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		final AppGlobals globals = AppGlobals.getSingleton();
 		String flag;
 
-		flag = globals.get(AUTO_COMPLETION_CHECK_BOX_PREF);
+		flag = globals.get(getString(R.string.input_auto_completion_pref));
 		if (flag != null && flag.equals("true")) {
-			final Boolean isEnableAutoCompletion = sharedPrefs.getBoolean(AUTO_COMPLETION_CHECK_BOX_PREF, true);
+			final Boolean isEnableAutoCompletion = sharedPrefs.getBoolean(getString(R.string.input_auto_completion_pref), true);
 			inputArea.setThreshold(isEnableAutoCompletion ? 2 : 100);
         }
 
-		flag = globals.get("manURL");
+		flag = globals.get(getString(R.string.maxima_manual_language_pref));
 		if (flag != null && flag.equals("true")) {
 			manLangChanged = true;
-			manURL = sharedPrefs.getString("manURL",manen);
+			manURL = sharedPrefs.getString(getString(R.string.maxima_manual_language_pref),manen);
 		} else {
 			manLangChanged = false;
 		}
 
-		flag = globals.get(INPUT_AREA_TEXT_SIZE_PREF);
+		flag = globals.get(getString(R.string.input_area_font_size_pref));
 		if (flag != null && flag.equals("true")) {
-			inputArea.setTextSize((float) Integer.parseInt(sharedPrefs.getString(INPUT_AREA_TEXT_SIZE_PREF, "20")));
+			inputArea.setTextSize((float) Integer.parseInt(sharedPrefs.getString(getString(R.string.input_area_font_size_pref), "20")));
 		}
 
-		flag = globals.get(BROWSER_TEXT_SIZE_PREF);
+		flag = globals.get(getString(R.string.browser_font_size_pref));
 		if (flag != null && flag.equals("true")) {
-			webview.loadUrl("javascript:window.ChangeExpSize(" + sharedPrefs.getString(BROWSER_TEXT_SIZE_PREF, "20") + ")");
+			webview.loadUrl("javascript:window.ChangeExpSize(" + sharedPrefs.getString(getString(R.string.browser_font_size_pref), "20") + ")");
 		}
 
-		final String list[] = { AUTO_COMPLETION_CHECK_BOX_PREF, "manURL", INPUT_AREA_TEXT_SIZE_PREF, BROWSER_TEXT_SIZE_PREF };
-		for (final String key : list) {
-			globals.set(key, "false");
+		final int list[] = { R.string.input_auto_completion_pref, R.string.maxima_manual_language_pref, R.string.input_area_font_size_pref, R.string.browser_font_size_pref };
+		for (final int resId : list) {
+			globals.set(getString(resId), "false");
 		}
 	}
 

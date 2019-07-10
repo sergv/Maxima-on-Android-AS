@@ -40,9 +40,9 @@ public final class MoAPreferenceActivity extends PreferenceActivity implements O
         final SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
         sharedPrefs.registerOnSharedPreferenceChangeListener(this);
 
-        final String list[] = { "auto_completion_check_box_pref", "manURL", "fontSize1", "fontSize2" };
-        for (final String key : list) {
-            AppGlobals.getSingleton().set(key, "false");
+        final int list[] = { R.string.input_auto_completion_pref, R.string.maxima_manual_language_pref, R.string.input_area_font_size_pref, R.string.browser_font_size_pref };
+        for (final int resId : list) {
+            AppGlobals.getSingleton().set(getString(resId), "false");
         }
     }
 
