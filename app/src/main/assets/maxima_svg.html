@@ -36,6 +36,11 @@
     });
   </script>
   <script type="text/javascript" src="MathJax-2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+  <style>
+    .formula {
+      font-size: 20px;
+    }
+  </style>
   <script>
     (function() {
       window.scrollToEnd = function() {
@@ -85,18 +90,38 @@
         document.getElementById("MathList").appendChild(node);
       }
 
-      window.expSize = 16;
-      window.ChangeExpSize = function(s) {
-        window.expSize = s;
-        // console.log("ChangeExpSize" + window.expSize);
+      // setStyle("default", ".formula", "font-size", "18px")
+      function setStyle(stylesheet, selectorText, style, value) {
+        /*  If value is given, the value is changed and returned
+         *  If '' (empty string) is given, erases the value.
+         *  The browser will apply the default one
+         *
+         * string stylesheet: part of the .css name to be recognized, e.g. 'default'
+         * string selectorText: css selector, e.g. '#myId', '.myClass', 'thead td'
+         * string style: camelCase element style, e.g. 'fontSize'
+         * string value optionnal : the new value
+         */
+        var rules;
+        for (var m in document.styleSheets) {
+          rules = document.styleSheets[m][document.all ? 'rules' : 'cssRules'];
+          for (var n in rules) {
+            var rule = rules[n];
+            if (rule.selectorText == selectorText) {
+              rule.style[style] = value;
+            }
+          }
+        }
       }
 
-      window.appendMathNode = function(parent, child) {
-        // console.log("appendMathNode: window.expSize = " + window.expSize);
-        var sizedChild = document.createElement("div");
-        sizedChild.style.fontSize = window.expSize + "px";
-        sizedChild.appendChild(child);
-        parent.appendChild(sizedChild);
+      window.ChangeExpSize = function(s) {
+        setStyle("default", ".formula", "font-size", s.toString() + "px");
+      }
+
+      window.appendMathNode = function(node) {
+        var sizedNode = document.createElement("div");
+        sizedNode.classList.add("formula");
+        sizedNode.appendChild(node);
+        document.getElementById("MathList").appendChild(sizedNode);
       }
 
       window.splitTextOnNewlines = function(text) {
@@ -170,8 +195,8 @@
         formula = delimiter + escapeDollars(str) + delimiter;
         tnode.appendChild(document.createTextNode(formula));
 
-        var mathlist = document.getElementById("MathList");
-        MathJax.Hub.queue.Push(["appendMathNode", window, mathlist, tnode]);
+        // var mathlist = document.getElementById("MathList");
+        MathJax.Hub.queue.Push(["appendMathNode", window, tnode]);
         // MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, mathlist]);
         MathJax.Hub.queue.Push(["Typeset", MathJax.Hub, tnode]);
         MathJax.Hub.queue.Push(["scrollToEnd", window]);

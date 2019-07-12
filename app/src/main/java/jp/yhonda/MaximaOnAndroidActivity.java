@@ -221,15 +221,8 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		// 	}
 		// });
 
-		final String newsize = settings.getString(getString(R.string.browser_font_size_pref), "");
-		if (!newsize.trim().isEmpty()) {
-			runOnUiThread(new Runnable() {
-				@Override
-				public void run() {
-					webview.loadUrl("javascript:window.ChangeExpSize(" + newsize + ")");
-				}
-			});
-		}
+        final String newsize = settings.getString(getString(R.string.browser_font_size_pref), "");
+        changeFormulaSize(newsize);
 
 		if (maximaRequiresInstall()) {
 			final Intent intent = new Intent(this, MOAInstallerActivity.class);
@@ -333,7 +326,7 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 
 		flag = globals.get(getString(R.string.browser_font_size_pref));
 		if (flag != null && flag.equals("true")) {
-			webview.loadUrl("javascript:window.ChangeExpSize(" + sharedPrefs.getString(getString(R.string.browser_font_size_pref), "20") + ")");
+            changeFormulaSize(sharedPrefs.getString(getString(R.string.browser_font_size_pref), "20"));
 		}
 
 		final int list[] = { R.string.input_auto_completion_pref, R.string.maxima_manual_language_pref, R.string.input_area_font_size_pref, R.string.browser_font_size_pref };
@@ -396,19 +389,27 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
         LogUtils.d("MaximaOnAndroidActivity.startMaximaProcess: done");
     }
 
-    private void restoreHistory(final MaximaService.InteractionHistory history) {
+    private void withJavascriptAvailable(final Runnable action) {
         new Thread(new Runnable() {
             @Override
             public void run() {
                 if (!ensureJavascriptAvailable()) {
                     return;
                 }
+                action.run();
+            }
+        }).start();
+    }
 
+    private void restoreHistory(final MaximaService.InteractionHistory history) {
+        withJavascriptAvailable (new Runnable() {
+            @Override
+            public void run() {
                 for (final InteractionCell cell : history.allEntries()) {
                     displayMaximaCmdResults(cell);
                 }
             }
-        }).start();
+        });
     }
 
 	private void copyExample(final String mcmd) {
@@ -995,6 +996,21 @@ public class MaximaOnAndroidActivity extends AppCompatActivity {
 		}
 	}
 
+    private void changeFormulaSize(final String newsize) {
+        if (!newsize.trim().isEmpty()) {
+            withJavascriptAvailable (new Runnable() {
+                @Override
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            webview.loadUrl("javascript:window.ChangeExpSize(" + newsize + ")");
+                        }
+                    });
+                }
+            });
+        }
+    }
 
 	private boolean ensureBinderInitialised() {
         try {
